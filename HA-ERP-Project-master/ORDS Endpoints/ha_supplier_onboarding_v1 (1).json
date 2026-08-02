@@ -1,0 +1,1852 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "ORDS generated API for ha_supplier_onboarding_v1",
+        "version": "1.0.0",
+        "description": "Supplier Onboarding finalized ATP/ORDS foundation API"
+    },
+    "servers": [
+        {
+            "url": "http://172.105.152.7:8181/ords/ha_erp_api/ha_v1"
+        }
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "description": "Retrieve a record from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "api_version": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "available_resources": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "checked_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "service_name": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": []
+            }
+        },
+        "/action-history": {
+            "get": {
+                "description": "Retrieve records from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "action_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "action_note": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "action_type": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "actor_subject_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "business_unit": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "existing_supplier_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "history_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "new_status": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "previous_status": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "requester_subject_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "request_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "request_number": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "supplier_name": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "action_type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "actor_roles",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "actor_subject_id",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Retrieve a record from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "checked_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "service_name": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "status": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": []
+            }
+        },
+        "/high-risk-countries": {
+            "get": {
+                "description": "Retrieve records from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "active": {
+                                                        "$ref": "#/components/schemas/CHAR"
+                                                    },
+                                                    "country_code": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "effective_date": {
+                                                        "$ref": "#/components/schemas/DATE"
+                                                    },
+                                                    "reason": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "source_name": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "updated_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "updated_by_subject_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": []
+            }
+        },
+        "/high-risk-countries/{country_code}": {
+            "put": {
+                "description": "Create or update a record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The successfully updated record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "country_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/integration-jobs": {
+            "get": {
+                "description": "Retrieve records from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "attempt_number": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "claimed_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "completed_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "correlation_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "created_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "error_message": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "error_type": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "integration_type": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "job_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "oic_instance_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "parent_job_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "payload_reference": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "request_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "response_reference": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "retryable": {
+                                                        "$ref": "#/components/schemas/CHAR"
+                                                    },
+                                                    "started_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "status": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "updated_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    }
+                ]
+            }
+        },
+        "/integration-jobs/{job_id}/claim": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "job_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_2"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/integration-jobs/{job_id}/result": {
+            "put": {
+                "description": "Create or update a record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The successfully updated record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "job_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_3"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/integration-logs": {
+            "get": {
+                "description": "Retrieve records from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "attempt_number": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "claimed_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "completed_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "correlation_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "created_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "error_message": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "error_type": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "integration_type": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "job_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "oic_instance_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "parent_job_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "payload_reference": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "request_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "response_reference": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "retryable": {
+                                                        "$ref": "#/components/schemas/CHAR"
+                                                    },
+                                                    "started_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "status": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "updated_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    }
+                ]
+            }
+        },
+        "/requests": {
+            "get": {
+                "description": "Retrieve records from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "allowed_actions": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "business_unit": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "country_code": {
+                                                        "$ref": "#/components/schemas/CHAR"
+                                                    },
+                                                    "created_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "currency_code": {
+                                                        "$ref": "#/components/schemas/CHAR"
+                                                    },
+                                                    "deterministic_risk_score": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "duplicate_level": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "expected_annual_spend": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "fusion_supplier_number": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "latest_ai_status": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "latest_justification_quality": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "product_service_category": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "requester_display_name": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "requester_subject_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "request_id": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "request_number": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "request_version": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "reviewed_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "reviewer_adjustment_points": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "risk_level": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "risk_score": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "status": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "submitted_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "supplier_name": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "supplier_type": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "updated_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "validation_status": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Implicit parameter"
+                    },
+                    {
+                        "name": "actor_roles",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Actor roles from HTTP header"
+                    },
+                    {
+                        "name": "actor_subject_id",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Actor identity from HTTP header"
+                    }
+                ]
+            },
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_4"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/requests/{request_id}": {
+            "put": {
+                "description": "Create or update a record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The successfully updated record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_5"
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "description": "Retrieve a record from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "address_line1": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "address_line2": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "allowed_actions": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "bank_account_last_four": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "bank_country_code": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "bank_currency_code": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "base_currency_amount": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "base_currency_code": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "business_justification": {
+                                            "$ref": "#/components/schemas/CLOB"
+                                        },
+                                        "business_unit": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "city": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "contact_email": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "contact_person": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "contact_phone": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "country_code": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "created_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "currency_code": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "deterministic_risk_score": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "duplicate_level": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "duplicate_matches_json": {
+                                            "$ref": "#/components/schemas/CLOB"
+                                        },
+                                        "expected_annual_spend": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "fusion_create_error": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "fusion_supplier_id": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "fusion_supplier_number": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "latest_ai_model_name": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "latest_ai_recommended_actions": {
+                                            "$ref": "#/components/schemas/CLOB"
+                                        },
+                                        "latest_ai_status": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "latest_ai_summary": {
+                                            "$ref": "#/components/schemas/CLOB"
+                                        },
+                                        "latest_justification_quality": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "postal_code": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "product_service_category": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "reference_sync_id": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "requester_display_name": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "requester_email": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "requester_subject_id": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "request_id": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "request_number": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "request_version": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "reviewed_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "reviewer_adjusted_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "reviewer_adjusted_by_subject_id": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "reviewer_adjustment_points": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "reviewer_adjustment_reason": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "risk_factors_json": {
+                                            "$ref": "#/components/schemas/CLOB"
+                                        },
+                                        "risk_level": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "risk_score": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "site_address_line1": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "site_city": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "site_country_code": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "site_name": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "state_or_province": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "status": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "submitted_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "supplier_name": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "supplier_type": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "tax_registration_masked": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "updated_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "validation_results_json": {
+                                            "$ref": "#/components/schemas/CLOB"
+                                        },
+                                        "validation_status": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    },
+                    {
+                        "name": "actor_roles",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Actor roles from HTTP header"
+                    },
+                    {
+                        "name": "actor_subject_id",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Actor identity from HTTP header"
+                    }
+                ]
+            }
+        },
+        "/requests/{request_id}/ai-regeneration": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_6"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/requests/{request_id}/documents": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_7"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/requests/{request_id}/documents/{document_id}": {
+            "get": {
+                "description": "Retrieve a record from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "content_length": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "document_id": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "document_type": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "file_name": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "is_latest": {
+                                            "$ref": "#/components/schemas/CHAR"
+                                        },
+                                        "mime_type": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        },
+                                        "request_id": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "request_version": {
+                                            "$ref": "#/components/schemas/NUMBER"
+                                        },
+                                        "uploaded_at": {
+                                            "$ref": "#/components/schemas/TIMESTAMP"
+                                        },
+                                        "uploaded_by_subject_id": {
+                                            "$ref": "#/components/schemas/VARCHAR2"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "document_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    },
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ]
+            }
+        },
+        "/requests/{request_id}/justification-risk-adjustment": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_8"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/requests/{request_id}/retry": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_9"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/requests/{request_id}/review": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_10"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/requests/{request_id}/submit": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_9"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/risk-rules": {
+            "get": {
+                "description": "Retrieve records from ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The queried record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "active": {
+                                                        "$ref": "#/components/schemas/CHAR"
+                                                    },
+                                                    "component": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "condition_description": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "display_order": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "max_weight": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    },
+                                                    "rule_code": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "rule_name": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "updated_at": {
+                                                        "$ref": "#/components/schemas/TIMESTAMP"
+                                                    },
+                                                    "updated_by_subject_id": {
+                                                        "$ref": "#/components/schemas/VARCHAR2"
+                                                    },
+                                                    "weight": {
+                                                        "$ref": "#/components/schemas/NUMBER"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": []
+            }
+        },
+        "/risk-rules/{rule_code}": {
+            "put": {
+                "description": "Create or update a record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "200": {
+                        "description": "The successfully updated record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "rule_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[^/]+$"
+                        },
+                        "description": "implicit"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_11"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/supplier-reference/batch": {
+            "post": {
+                "description": "Create a new record on ha_supplier_onboarding_v1",
+                "responses": {
+                    "201": {
+                        "description": "The successfully created record.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ha_v1_ITEM_12"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CHAR": {
+                "type": "string"
+            },
+            "CLOB": {
+                "type": "string"
+            },
+            "DATE": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^\\d{4}-[01]\\d-[0123]\\dT[012]\\d:[0-5]\\d:[0-5]\\d(.\\d+)?(Z|([-+][012]\\d:[0-5]\\d))$"
+            },
+            "NUMBER": {
+                "type": "number"
+            },
+            "STRING": {
+                "type": "string"
+            },
+            "TIMESTAMP": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^\\d{4}-[01]\\d-[0123]\\dT[012]\\d:[0-5]\\d:[0-5]\\d(.\\d+)?(Z|([-+][012]\\d:[0-5]\\d))$"
+            },
+            "VARCHAR2": {
+                "type": "string"
+            },
+            "ha_v1_ITEM": {
+                "properties": {
+                    "active": {
+                        "type": "string"
+                    },
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_2": {
+                "properties": {
+                    "correlation_id": {
+                        "type": "string"
+                    },
+                    "oic_instance_id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_3": {
+                "properties": {
+                    "ai_recommended_actions": {
+                        "type": "string"
+                    },
+                    "ai_summary": {
+                        "type": "string"
+                    },
+                    "error_message": {
+                        "type": "string"
+                    },
+                    "error_type": {
+                        "type": "string"
+                    },
+                    "fusion_supplier_id": {
+                        "type": "string"
+                    },
+                    "fusion_supplier_number": {
+                        "type": "string"
+                    },
+                    "job_status": {
+                        "type": "string"
+                    },
+                    "justification_quality": {
+                        "type": "string"
+                    },
+                    "model_name": {
+                        "type": "string"
+                    },
+                    "response_reference": {
+                        "type": "string"
+                    },
+                    "retryable": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_4": {
+                "properties": {
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    },
+                    "address_line1": {
+                        "type": "string"
+                    },
+                    "address_line2": {
+                        "type": "string"
+                    },
+                    "bank_account_raw": {
+                        "type": "string"
+                    },
+                    "bank_country_code": {
+                        "type": "string"
+                    },
+                    "bank_currency_code": {
+                        "type": "string"
+                    },
+                    "business_justification": {
+                        "type": "string"
+                    },
+                    "business_unit": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "contact_email": {
+                        "type": "string"
+                    },
+                    "contact_person": {
+                        "type": "string"
+                    },
+                    "contact_phone": {
+                        "type": "string"
+                    },
+                    "country_code": {
+                        "type": "string"
+                    },
+                    "currency_code": {
+                        "type": "string"
+                    },
+                    "expected_annual_spend": {
+                        "type": "string"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "product_service_category": {
+                        "type": "string"
+                    },
+                    "requester_display_name": {
+                        "type": "string"
+                    },
+                    "requester_email": {
+                        "type": "string"
+                    },
+                    "site_address_line1": {
+                        "type": "string"
+                    },
+                    "site_city": {
+                        "type": "string"
+                    },
+                    "site_country_code": {
+                        "type": "string"
+                    },
+                    "site_name": {
+                        "type": "string"
+                    },
+                    "state_or_province": {
+                        "type": "string"
+                    },
+                    "supplier_name": {
+                        "type": "string"
+                    },
+                    "supplier_type": {
+                        "type": "string"
+                    },
+                    "tax_registration_number": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_5": {
+                "properties": {
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    },
+                    "address_line1": {
+                        "type": "string"
+                    },
+                    "address_line2": {
+                        "type": "string"
+                    },
+                    "bank_account_raw": {
+                        "type": "string"
+                    },
+                    "bank_country_code": {
+                        "type": "string"
+                    },
+                    "bank_currency_code": {
+                        "type": "string"
+                    },
+                    "business_justification": {
+                        "type": "string"
+                    },
+                    "business_unit": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "contact_email": {
+                        "type": "string"
+                    },
+                    "contact_person": {
+                        "type": "string"
+                    },
+                    "contact_phone": {
+                        "type": "string"
+                    },
+                    "country_code": {
+                        "type": "string"
+                    },
+                    "currency_code": {
+                        "type": "string"
+                    },
+                    "expected_annual_spend": {
+                        "type": "string"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "product_service_category": {
+                        "type": "string"
+                    },
+                    "site_address_line1": {
+                        "type": "string"
+                    },
+                    "site_city": {
+                        "type": "string"
+                    },
+                    "site_country_code": {
+                        "type": "string"
+                    },
+                    "site_name": {
+                        "type": "string"
+                    },
+                    "state_or_province": {
+                        "type": "string"
+                    },
+                    "supplier_name": {
+                        "type": "string"
+                    },
+                    "supplier_type": {
+                        "type": "string"
+                    },
+                    "tax_registration_number": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_6": {
+                "properties": {
+                    "actor_roles": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_7": {
+                "properties": {
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    },
+                    "document_type": {
+                        "type": "string"
+                    },
+                    "file_name": {
+                        "type": "string"
+                    },
+                    "mime_type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_8": {
+                "properties": {
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    },
+                    "points": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_9": {
+                "properties": {
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_10": {
+                "properties": {
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    },
+                    "decision": {
+                        "type": "string"
+                    },
+                    "existing_supplier_id": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_11": {
+                "properties": {
+                    "active": {
+                        "type": "string"
+                    },
+                    "actor_roles": {
+                        "type": "string"
+                    },
+                    "actor_subject_id": {
+                        "type": "string"
+                    },
+                    "weight": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ha_v1_ITEM_12": {
+                "properties": {
+                    "fusion_supplier_id": {
+                        "type": "string"
+                    },
+                    "supplier_name": {
+                        "type": "string"
+                    },
+                    "supplier_number": {
+                        "type": "string"
+                    },
+                    "supplier_type": {
+                        "type": "string"
+                    },
+                    "sync_id": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

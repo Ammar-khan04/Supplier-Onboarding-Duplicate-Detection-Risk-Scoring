@@ -1,0 +1,675 @@
+<div id="supplier-portal-vbcs">
+  <style>
+/* supplier-portal-technical-design-v1: Visual Builder prototype shell */
+body .vb-web-applayout-header, body .vb-web-applayout-footer, body #shell-header, body #shell-footer { display: none !important; }
+body #pageContent.fixed-header { padding-top: 0 !important; }
+body .vb-content-and-footer-container { min-height: 100vh !important; }
+#supplier-portal-vbcs { min-height: 100vh; background: #f4f7fb; color: #0f172a; font-family: Arial, Helvetica, sans-serif; letter-spacing: 0; }
+#supplier-portal-vbcs * { box-sizing: border-box; }
+#supplier-portal-vbcs .sp-radio { position: absolute; opacity: 0; pointer-events: none; }
+#supplier-portal-vbcs .sp-topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 20px; background: #111827; color: #fff; border-bottom: 4px solid #635bff; }
+#supplier-portal-vbcs .sp-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+#supplier-portal-vbcs .sp-logo { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; background: #5b5ce2; color: #fff; font-weight: 800; }
+#supplier-portal-vbcs .sp-title { font-size: 19px; line-height: 1.1; font-weight: 800; }
+#supplier-portal-vbcs .sp-subtitle { margin-top: 3px; font-size: 12px; color: #c7d2fe; }
+#supplier-portal-vbcs .sp-roles { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+#supplier-portal-vbcs .sp-role { border: 1px solid #334155; background: #1f2937; color: #e5e7eb; border-radius: 7px; padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 800; }
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-topbar label[for="sp-role-requester"],
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-topbar label[for="sp-role-reviewer"],
+#supplier-portal-vbcs #sp-role-admin:checked ~ .sp-topbar label[for="sp-role-admin"] { background: #635bff; border-color: #8b87ff; color: #fff; }
+#supplier-portal-vbcs .sp-mode { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 12px 20px; background: #eef2ff; color: #1e1b8f; border-bottom: 1px solid #c7d2fe; font-size: 13px; }
+#supplier-portal-vbcs .sp-role-message, #supplier-portal-vbcs .sp-role-note, #supplier-portal-vbcs .role-requester-only, #supplier-portal-vbcs .role-reviewer-only, #supplier-portal-vbcs .role-admin-only, #supplier-portal-vbcs .role-requester-inline, #supplier-portal-vbcs .role-reviewer-inline, #supplier-portal-vbcs .role-admin-inline { display: none !important; }
+#supplier-portal-vbcs .sp-role-message strong { display: inline-block; margin-right: 8px; padding: 3px 8px; border-radius: 999px; background: #635bff; color: #fff; font-size: 11px; text-transform: uppercase; }
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-mode .role-requester,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-mode .role-reviewer,
+#supplier-portal-vbcs #sp-role-admin:checked ~ .sp-mode .role-admin { display: block !important; }
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-shell .role-requester-only,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-shell .role-reviewer-only,
+#supplier-portal-vbcs #sp-role-admin:checked ~ .sp-shell .role-admin-only { display: block !important; }
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-shell .role-requester-inline,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-shell .role-reviewer-inline,
+#supplier-portal-vbcs #sp-role-admin:checked ~ .sp-shell .role-admin-inline { display: inline-flex !important; }
+#supplier-portal-vbcs .sp-shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 18px; padding: 18px; max-width: 1380px; margin: 0 auto; }
+#supplier-portal-vbcs .sp-sidebar { display: grid; gap: 12px; align-content: start; }
+#supplier-portal-vbcs .sp-panel, #supplier-portal-vbcs .sp-section, #supplier-portal-vbcs .sp-card, #supplier-portal-vbcs .sp-form-block, #supplier-portal-vbcs .sp-stat, #supplier-portal-vbcs .sp-log-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+#supplier-portal-vbcs .sp-panel, #supplier-portal-vbcs .sp-form-block, #supplier-portal-vbcs .sp-card { padding: 14px; }
+#supplier-portal-vbcs .sp-side-title { margin: 0 0 8px; color: #334155; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+#supplier-portal-vbcs .sp-nav { display: grid; gap: 7px; }
+#supplier-portal-vbcs .sp-tab { display: block; width: 100%; text-align: left; border: 1px solid transparent; background: #fff; color: #1e293b; border-radius: 7px; padding: 10px 11px; font-weight: 800; font-size: 13px; cursor: pointer; }
+#supplier-portal-vbcs #sp-tab-dashboard:checked ~ .sp-shell label[for="sp-tab-dashboard"],
+#supplier-portal-vbcs #sp-tab-new-request:checked ~ .sp-shell label[for="sp-tab-new-request"],
+#supplier-portal-vbcs #sp-tab-review:checked ~ .sp-shell label[for="sp-tab-review"],
+#supplier-portal-vbcs #sp-tab-fusion-ref:checked ~ .sp-shell label[for="sp-tab-fusion-ref"],
+#supplier-portal-vbcs #sp-tab-admin-logs:checked ~ .sp-shell label[for="sp-tab-admin-logs"],
+#supplier-portal-vbcs #sp-tab-risk-rules:checked ~ .sp-shell label[for="sp-tab-risk-rules"],
+#supplier-portal-vbcs #sp-tab-api-map:checked ~ .sp-shell label[for="sp-tab-api-map"] { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
+#supplier-portal-vbcs .sp-count { float: right; color: #64748b; background: #f1f5f9; padding: 1px 6px; border-radius: 999px; font-size: 11px; }
+#supplier-portal-vbcs .sp-scenario { display: block; width: 100%; padding: 9px 10px; margin-top: 6px; border-radius: 7px; border: 1px solid #e2e8f0; background: #f8fafc; color: #334155; text-align: left; font-size: 12px; cursor: pointer; }
+#supplier-portal-vbcs .sp-scenario strong { display: block; color: #0f172a; font-size: 12px; }
+#supplier-portal-vbcs .sp-main { display: grid; gap: 16px; min-width: 0; }
+#supplier-portal-vbcs .sp-view, #supplier-portal-vbcs .sp-access-denied, #supplier-portal-vbcs .sp-decision-detail, #supplier-portal-vbcs .sp-risk-adjustment-detail { display: none; }
+#supplier-portal-vbcs #sp-tab-dashboard:checked ~ .sp-shell #sp-view-dashboard,
+#supplier-portal-vbcs #sp-tab-new-request:checked ~ .sp-shell #sp-view-new-request,
+#supplier-portal-vbcs #sp-tab-review:checked ~ .sp-shell #sp-view-review,
+#supplier-portal-vbcs #sp-tab-fusion-ref:checked ~ .sp-shell #sp-view-fusion-ref,
+#supplier-portal-vbcs #sp-tab-admin-logs:checked ~ .sp-shell #sp-view-admin-logs,
+#supplier-portal-vbcs #sp-tab-risk-rules:checked ~ .sp-shell #sp-view-risk-rules,
+#supplier-portal-vbcs #sp-tab-api-map:checked ~ .sp-shell #sp-view-api-map { display: block; }
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-shell label[for="sp-tab-review"],
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-shell label[for="sp-tab-fusion-ref"],
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-shell label[for="sp-tab-admin-logs"],
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-shell label[for="sp-tab-risk-rules"],
+#supplier-portal-vbcs #sp-role-requester:checked ~ .sp-shell label[for="sp-tab-api-map"],
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-shell label[for="sp-tab-new-request"],
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-shell label[for="sp-tab-admin-logs"],
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-shell label[for="sp-tab-risk-rules"],
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ .sp-shell label[for="sp-tab-api-map"],
+#supplier-portal-vbcs #sp-role-admin:checked ~ .sp-shell label[for="sp-tab-new-request"],
+#supplier-portal-vbcs #sp-role-admin:checked ~ .sp-shell label[for="sp-tab-review"],
+#supplier-portal-vbcs #sp-role-admin:checked ~ .sp-shell label[for="sp-tab-fusion-ref"] { display: none !important; }
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-review:checked ~ .sp-shell #sp-view-review,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-fusion-ref:checked ~ .sp-shell #sp-view-fusion-ref,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-admin-logs:checked ~ .sp-shell #sp-view-admin-logs,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-risk-rules:checked ~ .sp-shell #sp-view-risk-rules,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-api-map:checked ~ .sp-shell #sp-view-api-map,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-new-request:checked ~ .sp-shell #sp-view-new-request,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-admin-logs:checked ~ .sp-shell #sp-view-admin-logs,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-risk-rules:checked ~ .sp-shell #sp-view-risk-rules,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-api-map:checked ~ .sp-shell #sp-view-api-map,
+#supplier-portal-vbcs #sp-role-admin:checked ~ #sp-tab-new-request:checked ~ .sp-shell #sp-view-new-request,
+#supplier-portal-vbcs #sp-role-admin:checked ~ #sp-tab-review:checked ~ .sp-shell #sp-view-review,
+#supplier-portal-vbcs #sp-role-admin:checked ~ #sp-tab-fusion-ref:checked ~ .sp-shell #sp-view-fusion-ref { display: none !important; }
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-review:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-fusion-ref:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-admin-logs:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-risk-rules:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-requester:checked ~ #sp-tab-api-map:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-new-request:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-admin-logs:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-risk-rules:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-reviewer:checked ~ #sp-tab-api-map:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-admin:checked ~ #sp-tab-new-request:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-admin:checked ~ #sp-tab-review:checked ~ .sp-shell #sp-view-access-denied,
+#supplier-portal-vbcs #sp-role-admin:checked ~ #sp-tab-fusion-ref:checked ~ .sp-shell #sp-view-access-denied { display: block !important; }
+#supplier-portal-vbcs .sp-section { overflow: hidden; }
+#supplier-portal-vbcs .sp-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #e5e7eb; }
+#supplier-portal-vbcs h2 { margin: 0; font-size: 19px; line-height: 1.2; color: #0f172a; }
+#supplier-portal-vbcs h3 { margin: 0 0 10px; font-size: 13px; color: #3730a3; text-transform: uppercase; letter-spacing: .04em; }
+#supplier-portal-vbcs .sp-muted { color: #64748b; font-size: 12px; }
+#supplier-portal-vbcs .sp-small { color: #475569; font-size: 11px; line-height: 1.45; }
+#supplier-portal-vbcs .sp-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+#supplier-portal-vbcs .sp-btn { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; background: #fff; color: #334155; border-radius: 7px; padding: 8px 11px; font-size: 12px; font-weight: 800; cursor: pointer; text-decoration: none; min-height: 34px; }
+#supplier-portal-vbcs .sp-btn.primary { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+#supplier-portal-vbcs .sp-btn.success { background: #047857; color: #fff; border-color: #047857; }
+#supplier-portal-vbcs .sp-btn.warning { background: #f59e0b; color: #111827; border-color: #f59e0b; }
+#supplier-portal-vbcs .sp-btn.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+#supplier-portal-vbcs .sp-btn.neutral { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+#supplier-portal-vbcs .sp-table-wrap { overflow-x: auto; border-top: 1px solid #e5e7eb; }
+#supplier-portal-vbcs .sp-log-grid { display: grid; gap: 14px; padding: 14px 16px; }
+#supplier-portal-vbcs .sp-log-card { overflow: hidden; }
+#supplier-portal-vbcs .sp-log-card h3 { padding: 12px 14px; margin: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; }
+#supplier-portal-vbcs .sp-review-actions { border-top: 1px solid #e5e7eb; padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+#supplier-portal-vbcs .sp-correction-banner { margin: 14px 16px 0; padding: 12px 14px; border: 1px solid #fde68a; border-radius: 8px; background: #fffbeb; color: #92400e; }
+#supplier-portal-vbcs .sp-stats, #supplier-portal-vbcs .sp-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; background: #fafafa; }
+#supplier-portal-vbcs .sp-stat { padding: 12px; }
+#supplier-portal-vbcs .sp-stat .num { display: block; font-size: 25px; font-weight: 800; color: #0f172a; }
+#supplier-portal-vbcs table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#supplier-portal-vbcs th, #supplier-portal-vbcs td { padding: 11px 13px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: middle; }
+#supplier-portal-vbcs th { color: #334155; font-size: 11px; text-transform: uppercase; background: #f8fafc; }
+#supplier-portal-vbcs .sp-pill { display: inline-flex; border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+#supplier-portal-vbcs .sp-pill.low { background: #dcfce7; color: #166534; }
+#supplier-portal-vbcs .sp-pill.medium { background: #fef3c7; color: #92400e; }
+#supplier-portal-vbcs .sp-pill.high { background: #fee2e2; color: #b91c1c; }
+#supplier-portal-vbcs .sp-pill.neutral { background: #f1f5f9; color: #334155; }
+#supplier-portal-vbcs .sp-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 14px 16px; }
+#supplier-portal-vbcs .sp-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 14px 16px; }
+#supplier-portal-vbcs .sp-field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+#supplier-portal-vbcs label.field-label { display: block; font-size: 11px; color: #64748b; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px; }
+#supplier-portal-vbcs select, #supplier-portal-vbcs input:not(.sp-radio), #supplier-portal-vbcs textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 7px; padding: 8px 9px; background: #fff; color: #0f172a; font-size: 13px; }
+#supplier-portal-vbcs input[readonly] { background: #f8fafc; color: #475569; }
+#supplier-portal-vbcs textarea { min-height: 78px; resize: vertical; }
+#supplier-portal-vbcs input:required:invalid, #supplier-portal-vbcs select:required:invalid, #supplier-portal-vbcs textarea:required:invalid { border-color: #ef4444; background: #fff7f7; }
+#supplier-portal-vbcs .sp-footer-note { padding: 12px 16px; border-top: 1px solid #e5e7eb; color: #475569; font-size: 12px; background: #f8fafc; }
+#supplier-portal-vbcs .sp-code { font-family: Consolas, Monaco, monospace; font-size: 12px; color: #334155; background: #f8fafc; border-radius: 6px; padding: 2px 5px; white-space: normal; overflow-wrap: anywhere; }
+#supplier-portal-vbcs .sp-api-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 12px 16px; border-top: 1px solid #e5e7eb; background: #fbfdff; }
+#supplier-portal-vbcs .sp-total-ok { color: #166534; font-weight: 800; }
+#supplier-portal-vbcs .sp-total-bad { color: #b91c1c; font-weight: 800; }
+#supplier-portal-vbcs .sp-btn:disabled { opacity: .55; cursor: not-allowed; }
+#supplier-portal-vbcs #sp-decision-none:checked ~ .sp-decision-output .decision-none,
+#supplier-portal-vbcs #sp-decision-approve:checked ~ .sp-decision-output .decision-approve,
+#supplier-portal-vbcs #sp-decision-reject:checked ~ .sp-decision-output .decision-reject,
+#supplier-portal-vbcs #sp-decision-duplicate:checked ~ .sp-decision-output .decision-duplicate,
+#supplier-portal-vbcs #sp-decision-correction:checked ~ .sp-decision-output .decision-correction { display: block; }
+#supplier-portal-vbcs #sp-just-risk-none:checked ~ .sp-justification-risk-output .risk-adjust-none,
+#supplier-portal-vbcs #sp-just-risk-3:checked ~ .sp-justification-risk-output .risk-adjust-3,
+#supplier-portal-vbcs #sp-just-risk-5:checked ~ .sp-justification-risk-output .risk-adjust-5,
+#supplier-portal-vbcs #sp-just-risk-10:checked ~ .sp-justification-risk-output .risk-adjust-10 { display: block; }
+@media (max-width: 900px) {
+  #supplier-portal-vbcs .sp-shell, #supplier-portal-vbcs .sp-grid-2, #supplier-portal-vbcs .sp-grid-3, #supplier-portal-vbcs .sp-stats, #supplier-portal-vbcs .sp-filters, #supplier-portal-vbcs .sp-field-row, #supplier-portal-vbcs .sp-api-strip { grid-template-columns: 1fr; }
+  #supplier-portal-vbcs .sp-topbar, #supplier-portal-vbcs .sp-mode, #supplier-portal-vbcs .sp-section-head { align-items: flex-start; flex-direction: column; }
+}
+  </style>
+
+  <input class="sp-radio" type="radio" name="sp-role" id="sp-role-requester" checked>
+  <input class="sp-radio" type="radio" name="sp-role" id="sp-role-reviewer">
+  <input class="sp-radio" type="radio" name="sp-role" id="sp-role-admin">
+  <input class="sp-radio" type="radio" name="sp-view" id="sp-tab-dashboard" checked>
+  <input class="sp-radio" type="radio" name="sp-view" id="sp-tab-new-request">
+  <input class="sp-radio" type="radio" name="sp-view" id="sp-tab-review">
+  <input class="sp-radio" type="radio" name="sp-view" id="sp-tab-fusion-ref">
+  <input class="sp-radio" type="radio" name="sp-view" id="sp-tab-admin-logs">
+  <input class="sp-radio" type="radio" name="sp-view" id="sp-tab-risk-rules">
+  <input class="sp-radio" type="radio" name="sp-view" id="sp-tab-api-map">
+
+  <div class="sp-topbar">
+    <div class="sp-brand">
+      <div class="sp-logo">OP</div>
+      <div>
+        <div class="sp-title">Oracle PartnerConnect</div>
+        <div class="sp-subtitle">Supplier Onboarding, Duplicate Detection &amp; Risk Scoring Portal</div>
+      </div>
+    </div>
+    <div class="sp-roles">
+      <label class="sp-role" for="sp-role-requester">Requester</label>
+      <label class="sp-role" for="sp-role-reviewer">Reviewer</label>
+      <label class="sp-role" for="sp-role-admin">Admin</label>
+    </div>
+  </div>
+
+  <div class="sp-mode">
+    <div>
+      <div class="sp-role-message role-requester"><strong>Requester View</strong>Create drafts, upload documents, submit supplier requests, edit corrections, and track Fusion status.</div>
+      <div class="sp-role-message role-reviewer"><strong>Reviewer View</strong>Assess deterministic ATP findings, Gemini advisory text, Fusion reference matches, and decide approval, rejection, duplicate, or correction.</div>
+      <div class="sp-role-message role-admin"><strong>Admin View</strong>Inspect OIC/Fusion attempts, retry eligible failures, and manage risk-rule configuration.</div>
+    </div>
+    <div>Architecture: Visual Builder -> ORDS -> ATP, with OIC for Gemini, Fusion creation, and supplier sync.</div>
+  </div>
+
+  <div class="sp-shell">
+    <aside class="sp-sidebar">
+      <div class="sp-panel">
+        <p class="sp-side-title">Workspace</p>
+        <div class="sp-nav">
+          <label class="sp-tab" for="sp-tab-dashboard">Dashboard <span class="sp-count">5</span></label>
+          <label class="sp-tab" for="sp-tab-new-request">New Request</label>
+          <label class="sp-tab" for="sp-tab-review">Review Page <span class="sp-count">2</span></label>
+          <label class="sp-tab" for="sp-tab-fusion-ref">Fusion Reference</label>
+          <label class="sp-tab" for="sp-tab-admin-logs">OIC &amp; Fusion Logs <span class="sp-count">6</span></label>
+          <label class="sp-tab" for="sp-tab-risk-rules">Risk Rules</label>
+          <label class="sp-tab" for="sp-tab-api-map">API Map</label>
+        </div>
+      </div>
+      <div class="sp-panel">
+        <p class="sp-side-title">Role Workbench</p>
+        <div class="sp-role-note role-requester-only">Requester owns create, update, document upload, submit, correction edit, and own-request tracking.</div>
+        <div class="sp-role-note role-reviewer-only">Reviewer owns duplicate evidence, payment concern review, tax/document review, and final business decisions.</div>
+        <div class="sp-role-note role-admin-only">Admin owns integration attempt history, eligible retry, risk rules, thresholds, country lists, tax rules, and BU/site mapping.</div>
+      </div>
+      <div class="sp-panel">
+        <p class="sp-side-title">Flow Checkpoints</p>
+        <label class="sp-scenario" for="sp-tab-new-request"><strong>1. Draft</strong>POST /requests saves a request ID before upload.</label>
+        <label class="sp-scenario" for="sp-tab-new-request"><strong>2. Submit</strong>POST /submit runs ATP validation, duplicate, and risk procedures.</label>
+        <label class="sp-scenario" for="sp-tab-review"><strong>3. Review</strong>Reviewer chooses APPROVE, REJECT, MARK_DUPLICATE, or REQUEST_CORRECTION.</label>
+        <label class="sp-scenario" for="sp-tab-admin-logs"><strong>4. Integrate</strong>OIC claims AI_EXPLANATION, FUSION_CREATE, or SUPPLIER_SYNC jobs.</label>
+      </div>
+      <div class="sp-panel">
+        <p class="sp-side-title">Authority Boundary</p>
+        <div class="sp-small">Visual Builder gives immediate UI validation only. ATP procedures behind ORDS are authoritative for validation, duplicate detection, risk scoring, workflow status, and audit.</div>
+      </div>
+    </aside>
+
+    <main class="sp-main" data-sp-interactions="css-radio-tabs-v2">
+      <section id="sp-view-dashboard" class="sp-section sp-view">
+        <div class="sp-section-head">
+          <div>
+            <h2>Supplier Onboarding Dashboard</h2>
+            <div class="sp-muted">Role-filtered request tracking with current status, risk, duplicate level, AI status, and Fusion result.</div>
+          </div>
+          <div class="sp-actions">
+            <button type="button" class="sp-btn">Refresh Queue</button>
+            <label class="sp-btn primary role-requester-inline" for="sp-tab-new-request">New Supplier Request</label>
+          </div>
+        </div>
+        <div class="sp-stats">
+          <div class="sp-stat"><span class="num">8</span><span class="sp-muted">Open Requests</span></div>
+          <div class="sp-stat"><span class="num">2</span><span class="sp-muted">High/Critical Risk</span></div>
+          <div class="sp-stat"><span class="num">3</span><span class="sp-muted">Created In Fusion</span></div>
+          <div class="sp-stat"><span class="num">1</span><span class="sp-muted">Correction Required</span></div>
+        </div>
+        <div class="sp-filters">
+          <div><label class="field-label">Business Unit</label><select><option>All Business Units</option><option>PK Operations</option><option>US Manufacturing BU</option><option>Gulf Region</option></select></div>
+          <div><label class="field-label">Status</label><select><option>All Statuses</option><option>DRAFT</option><option>UNDER_REVIEW</option><option>CORRECTION_REQUIRED</option><option>INTEGRATION_FAILED</option></select></div>
+          <div><label class="field-label">Risk Level</label><select><option>All Risk Levels</option><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></div>
+          <div><label class="field-label">Duplicate Level</label><select><option>Any</option><option>Clear</option><option>Medium</option><option>High</option><option>Exact Match</option></select></div>
+        </div>
+        <div class="sp-table-wrap">
+          <table>
+            <thead><tr><th>Request / Supplier</th><th>Status</th><th>Risk</th><th>Duplicate</th><th>AI</th><th>Fusion Result</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><strong>SR-001018 Apex Industrial Supplies</strong><br><span class="sp-muted">US Manufacturing BU</span></td><td><span class="sp-pill low">CREATED_IN_FUSION</span></td><td><span class="sp-pill low">Low 12</span></td><td><span class="sp-pill neutral">Clear</span></td><td>Generated</td><td>SUP-10458</td><td><button type="button" class="sp-btn">View</button></td></tr>
+              <tr><td><strong>SR-001024 Al Noor Trading LLC</strong><br><span class="sp-muted">PK Operations</span></td><td><span class="sp-pill high">UNDER_REVIEW</span></td><td><span class="sp-pill high">Critical 80</span><br><span class="sp-muted">75 deterministic +5 reviewer</span></td><td><span class="sp-pill high">Exact Tax ID</span></td><td>Generated</td><td>Not submitted</td><td><label class="sp-btn primary role-reviewer-inline" for="sp-tab-review">Review</label></td></tr>
+              <tr><td><strong>SR-001025 Orion Logistics Partners</strong><br><span class="sp-muted">Shared Services</span></td><td><span class="sp-pill medium">CORRECTION_REQUIRED</span><br><span class="sp-muted">Reason: confirm bank country and attach tax certificate.</span></td><td><span class="sp-pill medium">Medium 38</span></td><td><span class="sp-pill medium">Similar Name</span></td><td>Generated</td><td>Draft</td><td><label class="sp-btn warning role-requester-inline" for="sp-tab-new-request">Edit</label></td></tr>
+              <tr><td><strong>SR-001026 BluePeak Facilities</strong><br><span class="sp-muted">US Manufacturing BU</span></td><td><span class="sp-pill high">INTEGRATION_FAILED</span></td><td><span class="sp-pill high">High 55</span></td><td><span class="sp-pill medium">Bank Country</span></td><td>Generated</td><td>Fusion timeout</td><td><label class="sp-btn warning role-admin-inline" for="sp-tab-admin-logs">Retry</label></td></tr>
+              <tr><td><strong>SR-001027 Meridian Safety GmbH</strong><br><span class="sp-muted">EU Global BU</span></td><td><span class="sp-pill neutral">DRAFT</span></td><td><span class="sp-pill neutral">Not assessed</span></td><td><span class="sp-pill neutral">Not assessed</span></td><td>Not queued</td><td>Not submitted</td><td><label class="sp-btn role-requester-inline" for="sp-tab-new-request">Continue</label></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sp-view-new-request" class="sp-section sp-view">
+        <iframe name="sp-validation-frame" style="display:none;"></iframe>
+        <form id="supplier-request-form" target="sp-validation-frame" action="about:blank" method="post">
+          <div class="sp-section-head">
+            <div>
+              <h2>New / Correction Request</h2>
+              <div class="sp-muted">Capture the supplier request fields that Visual Builder sends to ORDS. HTML checks are immediate; ATP checks are authoritative.</div>
+            </div>
+            <div class="sp-actions">
+              <button type="button" class="sp-btn role-requester-inline">Save Draft</button>
+              <button type="submit" class="sp-btn success role-requester-inline">Validate &amp; Submit</button>
+            </div>
+          </div>
+          <div class="sp-correction-banner role-requester-only"><strong>Correction required:</strong> Reviewer asked for bank country confirmation and tax certificate attachment. Edit the same request version, then submit again.</div>
+
+          <div class="sp-grid-2">
+            <div class="sp-form-block">
+              <h3>Corporate Identity</h3>
+              <div class="sp-field-row">
+                <div><label class="field-label">Supplier Name *</label><input name="supplierName" required value="Al Noor Trading LLC" placeholder="ABC Technologies Ltd."></div>
+                <div><label class="field-label">Supplier Type *</label><select name="supplierType" required><option value="">Select Type...</option><option selected>COMPANY</option><option>INDIVIDUAL</option><option>GOVERNMENT</option><option>NON_PROFIT</option></select></div>
+              </div>
+              <div class="sp-field-row">
+                <div><label class="field-label">Country Code *</label><select name="countryCode" required><option value="">Select Country...</option><option selected>PK</option><option>US</option><option>AE</option><option>DE</option><option>JP</option><option>SG</option><option>PA</option></select></div>
+                <div><label class="field-label">Business Unit *</label><select name="businessUnit" required><option value="">Select Business Unit...</option><option selected>PK_OPERATIONS</option><option>US_MANUFACTURING_BU</option><option>EU_GLOBAL_BU</option><option>APAC_LOGISTICS_BU</option></select></div>
+              </div>
+              <div class="sp-field-row">
+                <div><label class="field-label">Requester Display Name *</label><input name="requesterName" required value="Priya Sharma" placeholder="Requester name"></div>
+                <div><label class="field-label">Requester IAM Subject *</label><input name="requesterSubjectId" required readonly value="iam-sub-priya-001"></div>
+              </div>
+              <div class="sp-field-row">
+                <div><label class="field-label">Tax Registration Number *</label><input name="taxRegistrationNumber" required value="PK-1234567" placeholder="Use N/A when legally not applicable" pattern="[-A-Za-z0-9 ._/]{2,40}" title="Enter 2-40 letters/numbers/spaces/dots/slashes/hyphens, or N/A when legally not applicable."></div>
+                <div><label class="field-label">Category *</label><input name="category" required value="MAINTENANCE" placeholder="Product or service category"></div>
+              </div>
+              <div class="sp-field-row">
+                <div><label class="field-label">Expected Annual Spend *</label><input name="expectedAnnualSpend" type="number" required min="0" step="1000" value="150000" placeholder="150000"></div>
+                <div><label class="field-label">Currency Code *</label><select name="currencyCode" required><option selected>USD</option><option>PKR</option><option>AED</option><option>EUR</option><option>JPY</option></select></div>
+              </div>
+              <div><label class="field-label">Business Justification *</label><textarea name="businessJustification" required minlength="25" placeholder="State project, service, owner, and why an existing supplier cannot be used.">Needed to provide equipment maintenance for Plant A while the current vendor is unavailable for emergency coverage.</textarea></div>
+            </div>
+
+            <div class="sp-form-block">
+              <h3>Address, Site &amp; Contact</h3>
+              <div class="sp-field-row">
+                <div><label class="field-label">Contact Person *</label><input name="contactName" required value="Ali Khan" placeholder="Contact name"></div>
+                <div><label class="field-label">Contact Email *</label><input name="contactEmail" type="email" required value="ali@alnoor.example" placeholder="name@company.example"></div>
+              </div>
+              <div class="sp-field-row">
+                <div><label class="field-label">Phone</label><input name="phone" type="tel" value="+92-21-5550100" placeholder="+92-21-5550100"></div>
+                <div><label class="field-label">Site Name *</label><input name="siteName" required value="KARACHI_SITE" placeholder="KARACHI_SITE"></div>
+              </div>
+              <div class="sp-field-row">
+                <div><label class="field-label">Address Line 1 *</label><input name="addressLine1" required value="12 Main Road" placeholder="Street address"></div>
+                <div><label class="field-label">City *</label><input name="city" required value="Karachi" placeholder="City"></div>
+              </div>
+              <div class="sp-field-row">
+                <div><label class="field-label">State / Province</label><input name="stateOrProvince" value="Sindh" placeholder="State or province"></div>
+                <div><label class="field-label">Postal Code</label><input name="postalCode" value="74000" placeholder="Postal code"></div>
+              </div>
+              <div><label class="field-label">Site Address *</label><input name="siteAddress" required value="12 Main Road, Karachi" placeholder="Primary supplier site address"></div>
+              <div class="sp-small">Country, address line 1, and city are blocking address fields. State and postal code feed the configurable address-quality score when the country expects them.</div>
+            </div>
+          </div>
+
+          <div class="sp-grid-2" style="padding-top:0;">
+            <div class="sp-form-block">
+              <h3>Financial Routing</h3>
+              <div class="sp-field-row">
+                <div><label class="field-label">Bank Country Code</label><select name="bankCountryCode"><option value="">Default to supplier country</option><option selected>PK</option><option>US</option><option>AE</option><option>DE</option><option>SG</option></select></div>
+                <div><label class="field-label">Bank Account Number</label><input name="bankAccountNumber" value="1234567890" placeholder="6-34 digits if provided" inputmode="numeric" pattern="[0-9]{6,34}" title="If bank information is provided, enter 6-34 digits only."></div>
+              </div>
+              <div class="sp-small">Bank details can be absent at initial request. If present, ATP encrypts the value, stores a masked display value, and uses a protected fingerprint for exact duplicate matching.</div>
+            </div>
+            <div class="sp-form-block">
+              <h3>Supporting Document</h3>
+              <div class="sp-field-row">
+                <div><label class="field-label">Document Type</label><select name="documentType"><option>Tax Certificate</option><option>Bank Confirmation</option><option>Commercial Registration</option><option>Other</option></select></div>
+                <div><label class="field-label">Upload Document</label><input name="documentFile" type="file"></div>
+              </div>
+              <div class="sp-small">Missing expected documents become validation or risk findings in REQUEST_ASSESSMENT. The prototype stores supplier document metadata and BLOB content in REQUEST_DOCUMENT.</div>
+            </div>
+          </div>
+
+          <div class="sp-api-strip">
+            <div><span class="sp-code">POST /requests</span><br><span class="sp-muted">Create DRAFT and return requestId.</span></div>
+            <div><span class="sp-code">POST /requests/{id}/documents</span><br><span class="sp-muted">Attach evidence to the saved request.</span></div>
+            <div><span class="sp-code">POST /requests/{id}/submit</span><br><span class="sp-muted">Run validation, duplicate checks, risk score, and AI job creation.</span></div>
+          </div>
+          <div class="sp-footer-note">Required UI checks cover supplier name, type, country, business unit, requester identity, email, address, site, category, spend, currency, tax value or N/A, and justification. ORDS/ATP repeats and enforces the real rules server-side.</div>
+        </form>
+      </section>
+
+      <section id="sp-view-review" class="sp-section sp-view">
+        <input class="sp-radio" type="radio" name="sp-decision" id="sp-decision-none" checked>
+        <input class="sp-radio" type="radio" name="sp-decision" id="sp-decision-approve">
+        <input class="sp-radio" type="radio" name="sp-decision" id="sp-decision-reject">
+        <input class="sp-radio" type="radio" name="sp-decision" id="sp-decision-duplicate">
+        <input class="sp-radio" type="radio" name="sp-decision" id="sp-decision-correction">
+        <input class="sp-radio" type="radio" name="sp-just-risk" id="sp-just-risk-none" checked>
+        <input class="sp-radio" type="radio" name="sp-just-risk" id="sp-just-risk-3">
+        <input class="sp-radio" type="radio" name="sp-just-risk" id="sp-just-risk-5">
+        <input class="sp-radio" type="radio" name="sp-just-risk" id="sp-just-risk-10">
+
+        <div class="sp-section-head">
+          <div>
+            <h2>Reviewer Request Detail</h2>
+            <div class="sp-muted">Combined request detail, deterministic assessment, Gemini advisory, review history, and decision action.</div>
+          </div>
+          <button type="button" class="sp-btn role-reviewer-inline">Regenerate AI Output</button>
+        </div>
+
+        <div class="sp-grid-3">
+          <div class="sp-card"><h3>Request Snapshot</h3><p class="sp-muted"><strong>SR-001024</strong><br>Status UNDER_REVIEW<br>Version 3<br>Requester iam-sub-priya-001<br>Business unit PK_OPERATIONS</p></div>
+          <div class="sp-card"><h3>Risk Score</h3><p class="sp-muted"><span class="sp-pill high">Critical 80</span><br>75 deterministic points + 5 Reviewer-approved Gemini justification risk points. Final score is capped at 100.</p></div>
+          <div class="sp-card"><h3>Validation</h3><p class="sp-muted">0 blocking errors<br>Warnings: bank country mismatch, expected tax document missing, address-quality component incomplete.</p></div>
+        </div>
+
+        <div class="sp-grid-2">
+          <div class="sp-log-card">
+            <h3>Deterministic Risk Factors</h3>
+            <div class="sp-table-wrap">
+              <table>
+                <thead><tr><th>Rule Code</th><th>Evidence</th><th>Applied Weight</th></tr></thead>
+                <tbody>
+                  <tr><td>EXACT_TAX_ID_MATCH</td><td>Matches Fusion supplier SUP-09716</td><td>18</td></tr>
+                  <tr><td>EXACT_BANK_MATCH</td><td>Protected bank fingerprint matches Fusion supplier SUP-004512</td><td>20</td></tr>
+                  <tr><td>BANK_COUNTRY_MISMATCH</td><td>Supplier country PK, bank country AE</td><td>8</td></tr>
+                  <tr><td>HIGH_RISK_COUNTRY</td><td>Country appears in configured enhanced-review list</td><td>12</td></tr>
+                  <tr><td>HIGH_EXPECTED_SPEND</td><td>USD 150,000 band</td><td>5</td></tr>
+                  <tr><td>DUPLICATE_SIMILARITY</td><td>Highest non-exact score 87.5</td><td>12</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="sp-log-card">
+            <h3>Duplicate Matches</h3>
+            <div class="sp-table-wrap">
+              <table>
+                <thead><tr><th>Supplier</th><th>Match Type</th><th>Score</th><th>Reasons</th></tr></thead>
+                <tbody>
+                  <tr><td>SUP-09716 Al Noor General Trading</td><td>Exact tax ID</td><td>100</td><td>Same VAT number</td></tr>
+                  <tr><td>SUP-004512 ABC Tech Limited</td><td>Similarity</td><td>87.5</td><td>Name/address/country/email domain</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="sp-grid-3">
+          <div class="sp-card"><h3>Gemini Advisory</h3><p class="sp-muted">Justification quality: Weak. Gemini flags business-justification risk and suggests +5, but the score changes only if Reviewer confirms.</p></div>
+          <div class="sp-card"><h3>Fusion Creation Rule</h3><p class="sp-muted">Approval creates a FUSION_CREATE integration job. OIC creates the supplier in Fusion only after reviewer approval.</p></div>
+          <div class="sp-card"><h3>Audit Rule</h3><p class="sp-muted">Every decision writes ACTION_HISTORY with action, from_status, to_status, reason, actor_subject_id, and action_at.</p></div>
+        </div>
+
+        <div class="sp-log-card">
+          <h3>Gemini Business Justification Review</h3>
+          <div class="sp-table-wrap">
+            <table>
+              <thead><tr><th>Business Justification</th><th>Gemini Finding</th><th>Reviewer Control</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>Needed to provide equipment maintenance for Plant A while the current vendor is unavailable for emergency coverage.</td>
+                  <td><span class="sp-pill medium">Risk Flagged</span><br><span class="sp-muted">Missing named project owner, emergency approval reference, and explanation for why the existing matched supplier cannot be used.</span></td>
+                  <td><span class="sp-code">POST /requests/{requestId}/justification-risk-adjustment</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="sp-review-actions">
+            <label class="sp-btn neutral role-reviewer-inline" for="sp-just-risk-none">No Added Risk</label>
+            <label class="sp-btn warning role-reviewer-inline" for="sp-just-risk-3">+3</label>
+            <label class="sp-btn warning role-reviewer-inline" for="sp-just-risk-5">+5</label>
+            <label class="sp-btn danger role-reviewer-inline" for="sp-just-risk-10">+10</label>
+            <span class="sp-muted">Reviewer reads the justification and applies points only if Gemini is actually right.</span>
+          </div>
+        </div>
+
+        <div class="sp-log-grid sp-justification-risk-output">
+          <div class="sp-log-card sp-risk-adjustment-detail risk-adjust-none"><h3>Justification Risk Not Applied</h3><div class="sp-footer-note">Reviewer choice: no added risk. Reason: the reviewer did not confirm Gemini's concern. Final risk remains the deterministic score: 75.</div></div>
+          <div class="sp-log-card sp-risk-adjustment-detail risk-adjust-3"><h3>+3 Adjustment</h3><div class="sp-footer-note">Reviewer choice: add 3 points for minor justification risk. Final score preview: 78. The decision is stored on REQUEST_ASSESSMENT and audited in ACTION_HISTORY.</div></div>
+          <div class="sp-log-card sp-risk-adjustment-detail risk-adjust-5"><h3>+5 Adjustment</h3><div class="sp-footer-note">Reviewer choice: add 5 points for moderate justification risk. Final score preview: 80. The decision is stored on REQUEST_ASSESSMENT and audited in ACTION_HISTORY.</div></div>
+          <div class="sp-log-card sp-risk-adjustment-detail risk-adjust-10"><h3>+10 Adjustment</h3><div class="sp-footer-note">Reviewer choice: add 10 points for serious justification risk. Final score preview: 85. The decision is stored on REQUEST_ASSESSMENT and audited in ACTION_HISTORY.</div></div>
+        </div>
+
+        <div class="sp-review-actions">
+          <label class="sp-btn success role-reviewer-inline" for="sp-decision-approve">Accept</label>
+          <label class="sp-btn danger role-reviewer-inline" for="sp-decision-reject">Reject</label>
+          <label class="sp-btn neutral role-reviewer-inline" for="sp-decision-duplicate">Mark Duplicate</label>
+          <label class="sp-btn warning role-reviewer-inline" for="sp-decision-correction">Send Correction</label>
+          <span class="sp-muted">Allowed API actions: APPROVE, REJECT, MARK_DUPLICATE, REQUEST_CORRECTION.</span>
+        </div>
+
+        <div class="sp-log-grid sp-decision-output">
+          <div class="sp-log-card sp-decision-detail decision-none"><h3>Decision Outcome Preview</h3><div class="sp-footer-note">Choose a reviewer decision above to preview the business outcome and status transition.</div></div>
+          <div class="sp-log-card sp-decision-detail decision-approve"><h3>Accept Outcome</h3><div class="sp-footer-note">Decision: accept the request. Reason: tax and bank details are verified and warnings are acknowledged. Status moves from UNDER_REVIEW to APPROVED, then ATP creates a Fusion creation job.</div></div>
+          <div class="sp-log-card sp-decision-detail decision-reject"><h3>Reject Outcome</h3><div class="sp-footer-note">Decision: reject the request. Reason: duplicate risk and business justification were not resolved. Status moves from UNDER_REVIEW to REJECTED. No Fusion job is created.</div></div>
+          <div class="sp-log-card sp-decision-detail decision-duplicate"><h3>Mark Duplicate Outcome</h3><div class="sp-footer-note">Decision: mark as duplicate. Existing supplier: SUP-09716. Reason: exact tax ID match. Status moves from UNDER_REVIEW to DUPLICATE, and the existing supplier reference is stored in action history.</div></div>
+          <div class="sp-log-card sp-decision-detail decision-correction"><h3>Correction Outcome</h3><div class="sp-footer-note">Decision: send correction to the requester. Reason: confirm bank country and attach tax certificate. Status moves from UNDER_REVIEW to CORRECTION_REQUIRED, and the requester sees an Edit action.</div></div>
+        </div>
+      </section>
+
+      <section id="sp-view-fusion-ref" class="sp-section sp-view">
+        <div class="sp-section-head">
+          <div>
+            <h2>Fusion Supplier Reference</h2>
+            <div class="sp-muted">Read-only local reference copy synchronized from Fusion by OIC for duplicate matching.</div>
+          </div>
+          <button type="button" class="sp-btn primary role-reviewer-inline">Request Sync Status</button>
+        </div>
+        <div class="sp-table-wrap">
+          <table>
+            <thead><tr><th>fusion_supplier_id</th><th>supplier_number</th><th>supplier_name</th><th>normalized_name</th><th>country</th><th>tax_ref</th><th>email_domain</th><th>phone</th><th>bank</th><th>site</th><th>last_sync</th></tr></thead>
+            <tbody>
+              <tr><td>4512</td><td>SUP-004512</td><td>ABC Tech Limited</td><td>abc tech</td><td>PK</td><td>PK-1234567</td><td>abctech.example</td><td>+92-21-5550100</td><td>****7890</td><td>KARACHI_SITE</td><td>2026-07-16T07:05:00Z</td></tr>
+              <tr><td>9716</td><td>SUP-09716</td><td>Al Noor General Trading</td><td>al noor general trading</td><td>AE</td><td>VAT-784-339-11</td><td>alnoor.example</td><td>+971-4-5550100</td><td>****3842</td><td>DXB_MAIN</td><td>2026-07-16T07:05:00Z</td></tr>
+              <tr><td>10458</td><td>SUP-10458</td><td>Apex Industrial Supplies</td><td>apex industrial supplies</td><td>US</td><td>US-EIN-448209</td><td>apex.example</td><td>+1-555-0132</td><td>****7821</td><td>US-HQ</td><td>2026-07-16T07:05:00Z</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="sp-footer-note">Visual Builder never reads Fusion directly. OIC calls <span class="sp-code">POST /supplier-reference/batch</span>; ATP stores only fields needed for matching, masking sensitive bank values.</div>
+      </section>
+
+      <section id="sp-view-admin-logs" class="sp-section sp-view">
+        <div class="sp-section-head">
+          <div>
+            <h2>Admin Integration &amp; Audit Logs</h2>
+            <div class="sp-muted">ATP-backed history for AI responses, reviewer decisions, deterministic assessments, and OIC job attempts.</div>
+          </div>
+          <button type="button" class="sp-btn warning role-admin-inline">Retry Eligible Failures</button>
+        </div>
+        <div class="sp-log-grid">
+          <div class="sp-log-card">
+            <h3>REQUEST_ASSESSMENT</h3>
+            <div class="sp-table-wrap">
+              <table><thead><tr><th>assessment_id</th><th>request_id</th><th>version</th><th>validation_status</th><th>duplicate_level</th><th>deterministic_score</th><th>reviewer_adjustment</th><th>final_score</th><th>risk_level</th><th>assessed_at</th></tr></thead><tbody><tr><td>ASM-5003</td><td>1024</td><td>3</td><td>WARNINGS</td><td>HIGH</td><td>75</td><td>+5</td><td>80</td><td>CRITICAL</td><td>2026-07-16T07:31:00Z</td></tr><tr><td>ASM-5002</td><td>1024</td><td>2</td><td>VALIDATION_FAILED</td><td>MEDIUM</td><td>38</td><td>0</td><td>38</td><td>MEDIUM</td><td>2026-07-16T07:15:00Z</td></tr></tbody></table>
+            </div>
+          </div>
+          <div class="sp-log-card">
+            <h3>AI_ASSESSMENT</h3>
+            <div class="sp-table-wrap">
+              <table><thead><tr><th>ai_assessment_id</th><th>request_id</th><th>version</th><th>summary</th><th>recommended_actions</th><th>quality</th><th>justification_risk</th><th>suggested_points</th><th>model</th><th>status</th><th>generated_at</th></tr></thead><tbody><tr><td>AI-9001</td><td>1024</td><td>3</td><td>Possible duplicate, bank-country concern, and weak business justification.</td><td>Reviewer should verify existing supplier and decide whether to add justification-risk points.</td><td>Weak</td><td>Y</td><td>+5</td><td>Gemini</td><td><span class="sp-pill medium">GENERATED</span></td><td>2026-07-16T07:32:00Z</td></tr><tr><td>AI-9000</td><td>1024</td><td>2</td><td>Earlier summary retained for audit history.</td><td>Clarify justification.</td><td>Medium</td><td>N</td><td>-</td><td>Gemini</td><td><span class="sp-pill neutral">SUPERSEDED</span></td><td>2026-07-16T07:12:00Z</td></tr></tbody></table>
+            </div>
+          </div>
+          <div class="sp-log-card">
+            <h3>ACTION_HISTORY</h3>
+            <div class="sp-table-wrap">
+              <table><thead><tr><th>action_history_id</th><th>request_id</th><th>action</th><th>from_status</th><th>to_status</th><th>reason</th><th>existing_supplier_id</th><th>actor_subject_id</th><th>action_at</th></tr></thead><tbody><tr><td>ACT-4013</td><td>1024</td><td>APPLY_JUSTIFICATION_RISK</td><td>UNDER_REVIEW</td><td>UNDER_REVIEW</td><td>Added +5 after reviewing Gemini business-justification risk rationale.</td><td>-</td><td>iam-sub-reviewer-007</td><td>2026-07-16T07:34:00Z</td></tr><tr><td>ACT-4012</td><td>1025</td><td>REQUEST_CORRECTION</td><td>UNDER_REVIEW</td><td>CORRECTION_REQUIRED</td><td>Confirm bank country and attach tax certificate.</td><td>SUP-09716</td><td>iam-sub-reviewer-007</td><td>2026-07-16T07:35:00Z</td></tr><tr><td>ACT-4011</td><td>1024</td><td>SUBMIT</td><td>DRAFT</td><td>UNDER_REVIEW</td><td>Validation passed with warnings.</td><td>-</td><td>iam-sub-priya-001</td><td>2026-07-16T07:30:00Z</td></tr></tbody></table>
+            </div>
+          </div>
+          <div class="sp-log-card">
+            <h3>INTEGRATION_JOB</h3>
+            <div class="sp-table-wrap">
+              <table><thead><tr><th>job_id</th><th>parent_job_id</th><th>request_id</th><th>integration_type</th><th>status</th><th>attempt</th><th>oic_instance_id</th><th>payload_reference</th><th>response_reference</th><th>error_type</th><th>error_message</th><th>retryable</th><th>timestamps</th></tr></thead><tbody><tr><td>JOB-7002</td><td>JOB-7001</td><td>1026</td><td>FUSION_CREATE</td><td><span class="sp-pill medium">RETRY_READY</span></td><td>2</td><td>OIC-7782</td><td>obj://payloads/1026-v2.json</td><td>-</td><td>TECHNICAL</td><td>Fusion endpoint timeout.</td><td>Y</td><td>created 2026-07-16T07:38:00Z</td></tr><tr><td>JOB-7001</td><td>-</td><td>1026</td><td>FUSION_CREATE</td><td><span class="sp-pill high">FAILED</span></td><td>1</td><td>OIC-7781</td><td>obj://payloads/1026-v1.json</td><td>obj://responses/1026-error.json</td><td>FUSION_VALIDATION</td><td>Invalid site mapping.</td><td>Y</td><td>failed 2026-07-16T07:32:00Z</td></tr><tr><td>JOB-6999</td><td>-</td><td>1024</td><td>AI_EXPLANATION</td><td><span class="sp-pill low">SUCCEEDED</span></td><td>1</td><td>OIC-7779</td><td>obj://payloads/1024-ai.json</td><td>obj://responses/1024-ai.json</td><td>-</td><td>-</td><td>N</td><td>completed 2026-07-16T07:31:00Z</td></tr><tr><td>JOB-6998</td><td>-</td><td>-</td><td>SUPPLIER_SYNC</td><td><span class="sp-pill low">SUCCEEDED</span></td><td>1</td><td>OIC-7778</td><td>obj://payloads/sync.json</td><td>obj://responses/sync.json</td><td>-</td><td>-</td><td>N</td><td>completed 2026-07-16T07:05:00Z</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+        <div class="sp-footer-note">Retries create a new INTEGRATION_JOB row linked to parent_job_id. Retry is allowed only for eligible technical failures and never bypasses Reviewer approval.</div>
+      </section>
+
+      <section id="sp-view-risk-rules" class="sp-section sp-view">
+        <div class="sp-section-head">
+          <div>
+            <h2>Admin Risk Rule Configuration</h2>
+            <div class="sp-muted">Admin controls for deterministic weights, thresholds, risky-country list, tax rules, spend bands, address quality, and BU/site mapping.</div>
+          </div>
+          <button id="sp-save-risk-rules" type="button" class="sp-btn primary role-admin-inline">Save Rule Changes</button>
+        </div>
+        <div class="sp-grid-3">
+          <div class="sp-form-block"><h3>Allocation Total</h3><label class="field-label">Required Total</label><input readonly value="100"><label class="field-label">Current Total</label><input id="sp-weight-total-input" readonly value="100"><div id="sp-weight-balance-message" class="sp-total-ok">Balanced: 100 / 100 points allocated.</div></div>
+          <div class="sp-form-block"><h3>Risk Score Bands</h3><label class="field-label">Low Range</label><input readonly value="0-24"><label class="field-label">Medium Starts At</label><input value="25"><label class="field-label">High Starts At</label><input value="50"><label class="field-label">Critical Starts At</label><input value="75"><div class="sp-small">Bands are scaled over the 100-point allocation. If the required total changes later, thresholds should be stored as percentages and recalculated.</div></div>
+          <div class="sp-form-block"><h3>Expected Spend Bands</h3><label class="field-label">Base Currency</label><input value="USD"><label class="field-label">Medium Spend Starts At</label><input value="100000"><label class="field-label">High Spend Starts At</label><input value="250000"><label class="field-label">Critical Spend Starts At</label><input value="500000"></div>
+          <div class="sp-form-block"><h3>Tax &amp; Address</h3><label class="field-label">Tax Required Rule</label><input value="PK:COMPANY=true"><label class="field-label">Address Quality Components</label><input value="state_or_province, postal_code"><label class="field-label">Country Rule Source</label><input readonly value="RISKY_COUNTRY_CONFIG"></div>
+        </div>
+        <div class="sp-log-grid">
+          <div class="sp-log-card">
+            <h3>Admin Risky Country List</h3>
+            <div class="sp-table-wrap">
+              <table>
+                <thead><tr><th>Country Code</th><th>Country Name</th><th>Risk Reason</th><th>Active</th><th>Seeded</th><th>Admin Control</th></tr></thead>
+                <tbody>
+                  <tr><td>PK</td><td>Pakistan</td><td>Seeded prototype enhanced-review country used by the demo request.</td><td><input type="checkbox" checked></td><td>Y</td><td><span class="sp-code">PUT /high-risk-countries/PK</span></td></tr>
+                  <tr><td>PA</td><td>Panama</td><td>Seeded prototype enhanced-review country for country-list administration demo.</td><td><input type="checkbox" checked></td><td>Y</td><td><span class="sp-code">PUT /high-risk-countries/PA</span></td></tr>
+                  <tr><td>KY</td><td>Cayman Islands</td><td>Seeded prototype enhanced-review country for country-list administration demo.</td><td><input type="checkbox" checked></td><td>Y</td><td><span class="sp-code">PUT /high-risk-countries/KY</span></td></tr>
+                  <tr><td><input value="AE" aria-label="New risky country code"></td><td><input value="United Arab Emirates" aria-label="New risky country name"></td><td><input value="Add for future enhanced review if business approves." aria-label="New risky country reason"></td><td><input type="checkbox"></td><td>N</td><td><span class="sp-code">PUT /high-risk-countries/AE</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sp-footer-note">Admin can add, deactivate, or update risky countries. This changes whether HIGH_RISK_COUNTRY applies to future assessments; it does not change the 100-point weight total.</div>
+          </div>
+          <div class="sp-log-card">
+            <h3>Risk Weight Editor</h3>
+            <div class="sp-table-wrap">
+              <table>
+                <thead><tr><th>Rule Code</th><th>When It Applies</th><th>Weight</th><th>Share</th><th>Admin Control</th></tr></thead>
+                <tbody>
+                  <tr><td>MISSING_TAX_ID</td><td>Tax registration is required for country/type and missing.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="10"></td><td>10%</td><td><span class="sp-code">PUT /risk-rules/MISSING_TAX_ID</span></td></tr>
+                  <tr><td>MISSING_BANK_DETAILS</td><td>Configured supplier rule expects bank details and they are absent/incomplete.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="5"></td><td>5%</td><td><span class="sp-code">PUT /risk-rules/MISSING_BANK_DETAILS</span></td></tr>
+                  <tr><td>BANK_COUNTRY_MISMATCH</td><td>Bank settlement country differs from supplier country.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="8"></td><td>8%</td><td><span class="sp-code">PUT /risk-rules/BANK_COUNTRY_MISMATCH</span></td></tr>
+                  <tr><td>HIGH_RISK_COUNTRY</td><td>Supplier country is in the Admin-managed high-risk country list.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="12"></td><td>12%</td><td><span class="sp-code">PUT /risk-rules/HIGH_RISK_COUNTRY</span></td></tr>
+                  <tr><td>INCOMPLETE_ADDRESS</td><td>Configured address-quality components are missing.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="5"></td><td>5%</td><td><span class="sp-code">PUT /risk-rules/INCOMPLETE_ADDRESS</span></td></tr>
+                  <tr><td>MISSING_EXPECTED_DOCUMENT</td><td>Configured required document has not been uploaded.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="5"></td><td>5%</td><td><span class="sp-code">PUT /risk-rules/MISSING_EXPECTED_DOCUMENT</span></td></tr>
+                  <tr><td>HIGH_EXPECTED_SPEND</td><td>Expected annual spend falls into a configured spend band.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="5"></td><td>5%</td><td><span class="sp-code">PUT /risk-rules/HIGH_EXPECTED_SPEND</span></td></tr>
+                  <tr><td>EXACT_TAX_ID_MATCH</td><td>Tax ID exactly matches an existing Fusion supplier reference.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="18"></td><td>18%</td><td><span class="sp-code">PUT /risk-rules/EXACT_TAX_ID_MATCH</span></td></tr>
+                  <tr><td>EXACT_BANK_MATCH</td><td>Protected bank-account fingerprint exactly matches an existing Fusion supplier.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="20"></td><td>20%</td><td><span class="sp-code">PUT /risk-rules/EXACT_BANK_MATCH</span></td></tr>
+                  <tr><td>DUPLICATE_SIMILARITY</td><td>Non-exact duplicate score from name, address, country, email domain, and phone.</td><td><input class="sp-risk-weight" type="number" min="0" max="100" value="12"></td><td>12%</td><td><span class="sp-code">PUT /risk-rules/DUPLICATE_SIMILARITY</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sp-footer-note">All risk weights must total exactly 100. If Admin increases one rule, another rule must be reduced before Save Rule Changes is accepted. Earlier REQUEST_ASSESSMENT rows keep the applied weight and evidence used at the time of assessment.</div>
+          </div>
+          <div class="sp-log-card">
+            <h3>Readable Configuration Summary</h3>
+            <div class="sp-table-wrap">
+              <table>
+                <thead><tr><th>Configuration Area</th><th>Setting</th><th>Readable Value</th><th>Active</th><th>Updated By</th><th>Updated At</th></tr></thead>
+                <tbody>
+                  <tr><td>Risk Allocation</td><td>Required total</td><td>All active deterministic risk weights must add up to 100.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                  <tr><td>Risky Countries</td><td>PK</td><td>Pakistan is active and was part of the seeded risky-country list.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                  <tr><td>Risky Countries</td><td>PA</td><td>Panama is active and was part of the seeded risky-country list.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                  <tr><td>Score Band</td><td>Critical</td><td>Critical covers scores from 75 through 100.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                  <tr><td>Score Band</td><td>High</td><td>High covers scores from 50 through 74.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                  <tr><td>Score Band</td><td>Medium</td><td>Medium covers scores from 25 through 49.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                  <tr><td>Business Unit Site Mapping</td><td>PK Operations</td><td>PK Operations can use KARACHI_SITE.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                  <tr><td>Justification Quality Phrase</td><td>needed for project</td><td>This phrase is treated as weak justification unless the requester adds stronger business detail.</td><td>Yes</td><td>Admin</td><td>2026-07-16T07:00:00Z</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="sp-api-strip">
+          <div><span class="sp-code">GET /risk-rules</span><br><span class="sp-muted">Admin reads current configuration.</span></div>
+          <div><span class="sp-code">PUT /risk-rules/{ruleCode}</span><br><span class="sp-muted">Admin changes future scoring only; ORDS rejects totals not equal to 100.</span></div>
+          <div><span class="sp-code">GET/PUT /high-risk-countries</span><br><span class="sp-muted">Admin maintains country list separately from risk weights.</span></div>
+        </div>
+      </section>
+
+      <section id="sp-view-api-map" class="sp-section sp-view">
+        <div class="sp-section-head">
+          <div>
+            <h2>ORDS API Map</h2>
+            <div class="sp-muted">Base path: /ords/supplier-onboarding/v1. Oracle IAM supplies user identity and application roles.</div>
+          </div>
+        </div>
+        <div class="sp-grid-2">
+          <div class="sp-log-card">
+            <h3>Visual Builder APIs</h3>
+            <div class="sp-table-wrap">
+              <table><thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Role</th></tr></thead><tbody><tr><td>POST</td><td>/requests</td><td>Create draft</td><td>Requester</td></tr><tr><td>PUT</td><td>/requests/{requestId}</td><td>Update editable request</td><td>Requester</td></tr><tr><td>GET</td><td>/requests</td><td>Role-filtered list</td><td>All</td></tr><tr><td>GET</td><td>/requests/{requestId}</td><td>Detail and assessment</td><td>All, role-filtered</td></tr><tr><td>POST</td><td>/requests/{requestId}/submit</td><td>Validate, duplicate, deterministic risk, AI job</td><td>Requester</td></tr><tr><td>POST</td><td>/requests/{requestId}/justification-risk-adjustment</td><td>Apply +3, +5, or +10 Gemini justification-risk points</td><td>Reviewer</td></tr><tr><td>POST</td><td>/requests/{requestId}/review</td><td>Review decision</td><td>Reviewer</td></tr><tr><td>GET</td><td>/high-risk-countries</td><td>Read high-risk country list</td><td>Admin</td></tr><tr><td>PUT</td><td>/high-risk-countries/{countryCode}</td><td>Add or update high-risk countries</td><td>Admin</td></tr><tr><td>POST</td><td>/requests/{requestId}/retry</td><td>Retry eligible Fusion failure</td><td>Admin</td></tr><tr><td>GET</td><td>/integration-logs</td><td>Attempt and error logs</td><td>Admin</td></tr></tbody></table>
+            </div>
+          </div>
+          <div class="sp-log-card">
+            <h3>OIC-Facing APIs</h3>
+            <div class="sp-table-wrap">
+              <table><thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr></thead><tbody><tr><td>GET</td><td>/integration-jobs?type=AI_EXPLANATION&amp;status=READY</td><td>Read Gemini work</td></tr><tr><td>GET</td><td>/integration-jobs?type=FUSION_CREATE&amp;status=READY</td><td>Read Fusion creation work</td></tr><tr><td>POST</td><td>/integration-jobs/{jobId}/claim</td><td>Claim an attempt</td></tr><tr><td>PUT</td><td>/integration-jobs/{jobId}/result</td><td>Store success or failure</td></tr><tr><td>POST</td><td>/supplier-reference/batch</td><td>Sync Fusion supplier references</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+        <div class="sp-footer-note">Standard errors return code, message, and correlationId. Expected statuses: 200/201 success, 400 invalid input, 403 unauthorized role, 404 missing data, 409 invalid status/concurrent update, 500 unexpected error.</div>
+      </section>
+
+      <section id="sp-view-access-denied" class="sp-section sp-access-denied">
+        <div class="sp-section-head">
+          <div>
+            <h2>This Area Is Not Available For The Selected Role</h2>
+            <div class="sp-muted">Visual Builder hides pages by Oracle IAM role, while ORDS and ATP enforce authorization server-side.</div>
+          </div>
+          <label class="sp-btn primary" for="sp-tab-dashboard">Go To Dashboard</label>
+        </div>
+        <div class="sp-grid-3">
+          <div class="sp-card"><h3>Requester</h3><p class="sp-muted">Create, edit, submit, upload documents, and track own requests.</p></div>
+          <div class="sp-card"><h3>Reviewer</h3><p class="sp-muted">Review work queue, evidence, duplicate/risk output, and business decisions.</p></div>
+          <div class="sp-card"><h3>Admin</h3><p class="sp-muted">View integration logs, retry eligible technical failures, and manage rule configuration.</p></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+(function () {
+  function initSupplierPortalRiskRules() {
+    var root = document.getElementById('supplier-portal-vbcs');
+    if (!root) return;
+    var weights = Array.prototype.slice.call(root.querySelectorAll('.sp-risk-weight'));
+    var totalInput = root.querySelector('#sp-weight-total-input');
+    var message = root.querySelector('#sp-weight-balance-message');
+    var saveButton = root.querySelector('#sp-save-risk-rules');
+    function refresh() {
+      var total = weights.reduce(function (sum, input) {
+        return sum + (Number(input.value) || 0);
+      }, 0);
+      if (totalInput) totalInput.value = String(total);
+      if (message) {
+        var delta = 100 - total;
+        var correction = delta > 0
+          ? 'Add ' + delta + ' point' + (delta === 1 ? '' : 's') + ' across other weights before saving.'
+          : 'Reduce other weights by ' + Math.abs(delta) + ' point' + (Math.abs(delta) === 1 ? '' : 's') + ' before saving.';
+        message.className = total === 100 ? 'sp-total-ok' : 'sp-total-bad';
+        message.textContent = total === 100
+          ? 'Balanced: 100 / 100 points allocated.'
+          : 'Not balanced: ' + total + ' / 100 points allocated. ' + correction;
+      }
+      if (saveButton) saveButton.disabled = total !== 100;
+    }
+    weights.forEach(function (input) {
+      input.addEventListener('input', refresh);
+      input.addEventListener('change', refresh);
+    });
+    refresh();
+  }
+  window.SupplierPortalRiskRulesInit = initSupplierPortalRiskRules;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSupplierPortalRiskRules);
+  } else {
+    initSupplierPortalRiskRules();
+  }
+}());
+  </script>
+</div>

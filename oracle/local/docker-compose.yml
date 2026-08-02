@@ -1,0 +1,58 @@
+services:
+  oracle-db:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: supplier-oracle-db
+    hostname: oracle-db
+    environment:
+      ORACLE_PWD: ${ORACLE_PWD:-LocalOracle12345}
+      DB_SERVICE: ${DB_SERVICE:-FREEPDB1}
+      APP_USER: ${APP_USER:-SUPPLIER_APP}
+      APP_PASSWORD: ${APP_PASSWORD:-SupplierApp12345}
+    ports:
+      - "${DB_PORT:-1521}:1521"
+      - "${EM_PORT:-5500}:5500"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./db-init:/opt/oracle/scripts/setup:ro
+      - ../atp:/opt/supplier-atp:ro
+    healthcheck:
+      test: ["CMD-SHELL", "printf '%s\n' 'set heading off feedback off pagesize 0 verify off' \"select 'SUPPLIER_SCHEMA_READY=' || count(*) from user_tables where table_name = 'SUPPLIER_REQUEST';\" 'exit' | sqlplus -s $${APP_USER:-SUPPLIER_APP}/$${APP_PASSWORD:-SupplierApp12345}@//localhost:1521/$${DB_SERVICE:-FREEPDB1} | grep -q 'SUPPLIER_SCHEMA_READY=1'"]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
+    networks:
+      - supplier-net
+
+  ords:
+    build:
+      context: ./ords
+    container_name: supplier-ords
+    hostname: ords
+    depends_on:
+      oracle-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: oracle-db
+      DB_PORT: 1521
+      DB_SERVICE: ${DB_SERVICE:-FREEPDB1}
+      ORACLE_PWD: ${ORACLE_PWD:-LocalOracle12345}
+      ORDS_PUBLIC_USER_PASSWORD: ${ORDS_PUBLIC_USER_PASSWORD:-OrdsPublic12345}
+      APP_USER: ${APP_USER:-SUPPLIER_APP}
+      APP_PASSWORD: ${APP_PASSWORD:-SupplierApp12345}
+      ORDS_CONFIG: /etc/ords/config
+    ports:
+      - "${ORDS_PORT:-8080}:8080"
+    volumes:
+      - ords-config:/etc/ords/config
+      - ./ords/sql:/opt/ords-init:ro
+      - ../ords:/opt/supplier-ords:ro
+    networks:
+      - supplier-net
+
+volumes:
+  oracle-data:
+  ords-config:
+
+networks:
+  supplier-net:

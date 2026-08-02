@@ -1,0 +1,485 @@
+{
+  "info": {
+    "name": "Supplier Onboarding Local ORDS Bare v2.1.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Service Index",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/"
+      }
+    },
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/health"
+      }
+    },
+    {
+      "name": "List Requests - Requester",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests?actor_subject_id=REQ_AMINA_SUB&actor_roles=REQUESTER&limit=10&offset=0"
+      }
+    },
+    {
+      "name": "List Requests - Reviewer",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests?actor_subject_id=REV_PRIYA_SUB&actor_roles=REVIEWER&limit=10&offset=0"
+      }
+    },
+    {
+      "name": "List Requests - Admin",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests?actor_subject_id=ADM_LINDA_SUB&actor_roles=ADMIN&limit=10&offset=0"
+      }
+    },
+    {
+      "name": "Create Draft Supplier Request",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "actor_subject_id",
+              "value": "REQ_AMINA_SUB",
+              "type": "text"
+            },
+            {
+              "key": "actor_roles",
+              "value": "REQUESTER",
+              "type": "text"
+            },
+            {
+              "key": "requester_display_name",
+              "value": "Amina Requester",
+              "type": "text"
+            },
+            {
+              "key": "requester_email",
+              "value": "amina.requester@example.com",
+              "type": "text"
+            },
+            {
+              "key": "supplier_name",
+              "value": "Bare Postman Supplier",
+              "type": "text"
+            },
+            {
+              "key": "supplier_type",
+              "value": "COMPANY",
+              "type": "text"
+            },
+            {
+              "key": "country_code",
+              "value": "US",
+              "type": "text"
+            },
+            {
+              "key": "address_line1",
+              "value": "100 Bare Import Avenue",
+              "type": "text"
+            },
+            {
+              "key": "city",
+              "value": "Austin",
+              "type": "text"
+            },
+            {
+              "key": "contact_person",
+              "value": "Taylor Bare",
+              "type": "text"
+            },
+            {
+              "key": "contact_email",
+              "value": "bare-import@example.com",
+              "type": "text"
+            },
+            {
+              "key": "contact_phone",
+              "value": "+1-555-0199",
+              "type": "text"
+            },
+            {
+              "key": "business_unit",
+              "value": "PROCUREMENT",
+              "type": "text"
+            },
+            {
+              "key": "business_justification",
+              "value": "Bare Postman import test supplier request.",
+              "type": "text"
+            },
+            {
+              "key": "product_service_category",
+              "value": "Operations Services",
+              "type": "text"
+            },
+            {
+              "key": "expected_annual_spend",
+              "value": "130000",
+              "type": "text"
+            },
+            {
+              "key": "currency_code",
+              "value": "USD",
+              "type": "text"
+            },
+            {
+              "key": "tax_registration_number",
+              "value": "US-BARE-IMPORT-001",
+              "type": "text"
+            },
+            {
+              "key": "site_name",
+              "value": "Bare Import Site",
+              "type": "text"
+            },
+            {
+              "key": "site_address_line1",
+              "value": "100 Bare Import Avenue",
+              "type": "text"
+            },
+            {
+              "key": "site_city",
+              "value": "Austin",
+              "type": "text"
+            },
+            {
+              "key": "site_country_code",
+              "value": "US",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Request 1000",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000?actor_subject_id=REQ_AMINA_SUB&actor_roles=REQUESTER"
+      }
+    },
+    {
+      "name": "Update Request 1000",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000?actor_subject_id=REQ_AMINA_SUB&actor_roles=REQUESTER&contact_phone=%2B1-555-0199&address_line2=Suite%2020&expected_annual_spend=130000"
+      }
+    },
+    {
+      "name": "Submit Request 1000",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000/submit",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "actor_subject_id",
+              "value": "REQ_AMINA_SUB",
+              "type": "text"
+            },
+            {
+              "key": "actor_roles",
+              "value": "REQUESTER",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Add Document To Request 1000",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000/documents",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "actor_subject_id",
+              "value": "REQ_AMINA_SUB",
+              "type": "text"
+            },
+            {
+              "key": "actor_roles",
+              "value": "REQUESTER",
+              "type": "text"
+            },
+            {
+              "key": "document_type",
+              "value": "TAX_FORM",
+              "type": "text"
+            },
+            {
+              "key": "file_name",
+              "value": "bare-tax-form.pdf",
+              "type": "text"
+            },
+            {
+              "key": "mime_type",
+              "value": "application/pdf",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Document 1000",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000/documents/1000"
+      }
+    },
+    {
+      "name": "Review Request 1000 - Approve",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000/review",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "actor_subject_id",
+              "value": "REV_PRIYA_SUB",
+              "type": "text"
+            },
+            {
+              "key": "actor_roles",
+              "value": "REVIEWER",
+              "type": "text"
+            },
+            {
+              "key": "decision",
+              "value": "APPROVE",
+              "type": "text"
+            },
+            {
+              "key": "reason",
+              "value": "Bare Postman approval.",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Apply +5 Justification Risk",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000/justification-risk-adjustment",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "actor_subject_id",
+              "value": "REV_PRIYA_SUB",
+              "type": "text"
+            },
+            {
+              "key": "actor_roles",
+              "value": "REVIEWER",
+              "type": "text"
+            },
+            {
+              "key": "points",
+              "value": "5",
+              "type": "text"
+            },
+            {
+              "key": "reason",
+              "value": "Bare Postman reviewer adjustment.",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Queue AI Regeneration",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000/ai-regeneration",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "actor_subject_id",
+              "value": "REV_PRIYA_SUB",
+              "type": "text"
+            },
+            {
+              "key": "actor_roles",
+              "value": "REVIEWER",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Retry Latest Failed Request Job",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/requests/1000/retry",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "actor_subject_id",
+              "value": "ADM_LINDA_SUB",
+              "type": "text"
+            },
+            {
+              "key": "actor_roles",
+              "value": "ADMIN",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "List Integration Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/integration-logs?actor_subject_id=ADM_LINDA_SUB&actor_roles=ADMIN"
+      }
+    },
+    {
+      "name": "List Integration Jobs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/integration-jobs?type=FUSION_CREATE&status=READY&limit=25"
+      }
+    },
+    {
+      "name": "Claim Integration Job 1000",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/integration-jobs/1000/claim",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "oic_instance_id",
+              "value": "OIC-POSTMAN-LOCAL",
+              "type": "text"
+            },
+            {
+              "key": "correlation_id",
+              "value": "BARE-CLAIM",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Record Integration Job 1000 Result",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/integration-jobs/1000/result?job_status=SUCCEEDED&response_reference=BARE-RESP&retryable=N"
+      }
+    },
+    {
+      "name": "Upsert Supplier Reference",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/supplier-reference/batch",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "fusion_supplier_id",
+              "value": "BARE-FUSION-REF",
+              "type": "text"
+            },
+            {
+              "key": "supplier_number",
+              "value": "BARE-REF-001",
+              "type": "text"
+            },
+            {
+              "key": "supplier_name",
+              "value": "Bare Existing Supplier",
+              "type": "text"
+            },
+            {
+              "key": "supplier_type",
+              "value": "COMPANY",
+              "type": "text"
+            },
+            {
+              "key": "sync_id",
+              "value": "BARE-SYNC",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "List Risk Rules",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/risk-rules?actor_subject_id=ADM_LINDA_SUB&actor_roles=ADMIN"
+      }
+    },
+    {
+      "name": "Update HIGH_EXPECTED_SPEND Risk Rule",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/risk-rules/HIGH_EXPECTED_SPEND?actor_subject_id=ADM_LINDA_SUB&actor_roles=ADMIN&weight=5&active=Y"
+      }
+    },
+    {
+      "name": "List High Risk Countries",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/high-risk-countries?actor_subject_id=ADM_LINDA_SUB&actor_roles=ADMIN"
+      }
+    },
+    {
+      "name": "Set High Risk Country XZ",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/high-risk-countries/XZ?actor_subject_id=ADM_LINDA_SUB&actor_roles=ADMIN&active=Y&reason=Bare%20import%20test&source=Postman"
+      }
+    }
+  ]
+}

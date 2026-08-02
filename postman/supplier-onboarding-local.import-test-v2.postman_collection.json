@@ -1,0 +1,22 @@
+{
+  "info": {
+    "name": "Supplier Onboarding Local ORDS Import Test v2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/health"
+      }
+    },
+    {
+      "name": "Service Index",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8080/ords/supplier-onboarding/v1/"
+      }
+    }
+  ]
+}

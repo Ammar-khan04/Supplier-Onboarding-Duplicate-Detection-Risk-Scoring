@@ -1,0 +1,2030 @@
+{
+  "info": {
+    "name": "Supplier Onboarding Local ORDS",
+    "description": "Postman collection for the local Oracle ORDS Supplier Onboarding API. Import with the Supplier Onboarding Local ORDS environment and run folders in order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "be557b33-c0df-4d0a-bf4b-1eeccc1f4fe5"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get('testToken')) {",
+          "  pm.environment.set('testToken', Date.now().toString());",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Health and Reads",
+      "item": [
+        {
+          "name": "Service Index",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('service index returns 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('service name is supplier-onboarding-ords', function () { pm.expect(pm.response.json().service_name).to.eql('supplier-onboarding-ords'); });"
+                ]
+              }
+            }
+          ],
+          "id": "977f6488-2263-49a9-a9ae-a77fb29b8e10"
+        },
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('health returns ok', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "id": "2e689cf0-7741-4d7d-88ea-7ac9d857ff92"
+        },
+        {
+          "name": "List Requests as Requester",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests?actor_subject_id={{requesterSubject}}&actor_roles=REQUESTER&limit=10&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "id": "54bbfc07-fcd3-4ca4-a26d-a1b39c26995c"
+        },
+        {
+          "name": "List Requests as Reviewer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests?actor_subject_id={{reviewerSubject}}&actor_roles=REVIEWER&limit=10&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{reviewerSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REVIEWER"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "id": "9eae2698-a28c-45ba-a113-17678ff547f4"
+        },
+        {
+          "name": "List Requests as Admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests?actor_subject_id={{adminSubject}}&actor_roles=ADMIN&limit=10&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "id": "4627b169-3bea-4516-a0a1-28d8140b1f1e"
+        },
+        {
+          "name": "List Risk Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/risk-rules?actor_subject_id={{adminSubject}}&actor_roles=ADMIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "risk-rules"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var rows = pm.response.json().items || [];",
+                  "var total = 0;",
+                  "rows.forEach(function (row) { if (row.active === 'Y') { total += Number(row.weight || 0); } });",
+                  "pm.test('active risk weights total 100', function () { pm.expect(total).to.eql(100); });"
+                ]
+              }
+            }
+          ],
+          "id": "cc93e9e2-193d-4f88-8d71-219955890ba5"
+        },
+        {
+          "name": "List High Risk Countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/high-risk-countries?actor_subject_id={{adminSubject}}&actor_roles=ADMIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "high-risk-countries"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN"
+                }
+              ]
+            }
+          },
+          "id": "bd016296-acc8-4d93-b00b-28d2a0c4b805"
+        },
+        {
+          "name": "List Integration Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-logs?actor_subject_id={{adminSubject}}&actor_roles=ADMIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-logs"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN"
+                }
+              ]
+            }
+          },
+          "id": "fb1be944-2a2d-4dfc-9cf7-bd6bb5d48fad"
+        },
+        {
+          "name": "Poll Ready AI Explanation Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs?type=AI_EXPLANATION&status=READY&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "AI_EXPLANATION"
+                },
+                {
+                  "key": "status",
+                  "value": "READY"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            }
+          },
+          "id": "be2753dd-ffc8-4d9f-80fb-b8ac71cd005a"
+        },
+        {
+          "name": "Poll Ready Fusion Create Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs?type=FUSION_CREATE&status=READY&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "FUSION_CREATE"
+                },
+                {
+                  "key": "status",
+                  "value": "READY"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            }
+          },
+          "id": "30cc47fe-3129-4c38-861f-456139211428"
+        },
+        {
+          "name": "Poll Ready Supplier Sync Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs?type=SUPPLIER_SYNC&status=READY&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "SUPPLIER_SYNC"
+                },
+                {
+                  "key": "status",
+                  "value": "READY"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            }
+          },
+          "id": "320d0a63-67fb-4714-b165-41cd2ea3150f"
+        }
+      ],
+      "id": "00e23bf4-ecc4-45b6-a38d-d3467cfde94b"
+    },
+    {
+      "name": "01 Requester Happy Path",
+      "item": [
+        {
+          "name": "Create Draft Supplier Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER",
+                  "type": "text"
+                },
+                {
+                  "key": "requester_display_name",
+                  "value": "Amina Requester",
+                  "type": "text"
+                },
+                {
+                  "key": "requester_email",
+                  "value": "amina.requester@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_name",
+                  "value": "Postman Test Supplier {{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_type",
+                  "value": "COMPANY",
+                  "type": "text"
+                },
+                {
+                  "key": "country_code",
+                  "value": "US",
+                  "type": "text"
+                },
+                {
+                  "key": "address_line1",
+                  "value": "100 Postman Avenue",
+                  "type": "text"
+                },
+                {
+                  "key": "address_line2",
+                  "value": "Suite 20",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "Austin",
+                  "type": "text"
+                },
+                {
+                  "key": "state_or_province",
+                  "value": "TX",
+                  "type": "text"
+                },
+                {
+                  "key": "postal_code",
+                  "value": "78701",
+                  "type": "text"
+                },
+                {
+                  "key": "contact_person",
+                  "value": "Taylor Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "contact_email",
+                  "value": "postman-{{testToken}}@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "contact_phone",
+                  "value": "+1-555-0100",
+                  "type": "text"
+                },
+                {
+                  "key": "business_unit",
+                  "value": "PROCUREMENT",
+                  "type": "text"
+                },
+                {
+                  "key": "business_justification",
+                  "value": "Postman local API walkthrough for supplier onboarding and review.",
+                  "type": "text"
+                },
+                {
+                  "key": "product_service_category",
+                  "value": "Technology Services",
+                  "type": "text"
+                },
+                {
+                  "key": "expected_annual_spend",
+                  "value": "125000",
+                  "type": "text"
+                },
+                {
+                  "key": "currency_code",
+                  "value": "USD",
+                  "type": "text"
+                },
+                {
+                  "key": "tax_registration_number",
+                  "value": "TAX-POSTMAN-{{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "bank_country_code",
+                  "value": "US",
+                  "type": "text"
+                },
+                {
+                  "key": "bank_currency_code",
+                  "value": "USD",
+                  "type": "text"
+                },
+                {
+                  "key": "bank_account_raw",
+                  "value": "99000000{{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "site_name",
+                  "value": "Austin Intake",
+                  "type": "text"
+                },
+                {
+                  "key": "site_address_line1",
+                  "value": "100 Postman Avenue",
+                  "type": "text"
+                },
+                {
+                  "key": "site_city",
+                  "value": "Austin",
+                  "type": "text"
+                },
+                {
+                  "key": "site_country_code",
+                  "value": "US",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('create request returns 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "var data = pm.response.json();",
+                  "pm.test('request id returned', function () { pm.expect(data.request_id === undefined).to.eql(false); });",
+                  "pm.environment.set('requestId', data.request_id);"
+                ]
+              }
+            }
+          ],
+          "id": "65330086-e05c-40f0-b3a6-b12c3010ed5a"
+        },
+        {
+          "name": "Get Created Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}?actor_subject_id={{requesterSubject}}&actor_roles=REQUESTER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER"
+                }
+              ]
+            }
+          },
+          "id": "4d485438-7365-4343-a942-25136ecbd3bb"
+        },
+        {
+          "name": "Update Draft Request",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}?actor_subject_id={{requesterSubject}}&actor_roles=REQUESTER&contact_phone=%2B1-555-0199&address_line2=Suite%2020%20Updated&business_justification=Updated%20Postman%20local%20API%20walkthrough%20justification%20for%20supplier%20onboarding%20and%20review.&expected_annual_spend=130000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER"
+                },
+                {
+                  "key": "contact_phone",
+                  "value": "%2B1-555-0199"
+                },
+                {
+                  "key": "address_line2",
+                  "value": "Suite%2020%20Updated"
+                },
+                {
+                  "key": "business_justification",
+                  "value": "Updated%20Postman%20local%20API%20walkthrough%20justification%20for%20supplier%20onboarding%20and%20review."
+                },
+                {
+                  "key": "expected_annual_spend",
+                  "value": "130000"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('draft update recorded', function () {",
+                  "  pm.expect(pm.response.json().status).to.eql('updated');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "id": "136af947-7301-428b-9c4b-efaa52ba30eb"
+        },
+        {
+          "name": "Get Updated Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}?actor_subject_id={{requesterSubject}}&actor_roles=REQUESTER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('updated values are visible', function () {",
+                  "  var data = pm.response.json();",
+                  "  pm.expect(data.contact_phone).to.eql('+1-555-0199');",
+                  "  pm.expect(Number(data.expected_annual_spend)).to.eql(130000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "id": "6eb397da-3378-48ce-8e55-0c2e9763fd61"
+        },
+        {
+          "name": "Add Document Metadata",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER",
+                  "type": "text"
+                },
+                {
+                  "key": "document_type",
+                  "value": "TAX_FORM",
+                  "type": "text"
+                },
+                {
+                  "key": "file_name",
+                  "value": "postman-tax-form-{{testToken}}.pdf",
+                  "type": "text"
+                },
+                {
+                  "key": "mime_type",
+                  "value": "application/pdf",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}",
+                "documents"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var data = pm.response.json();",
+                  "pm.test('document id returned', function () { pm.expect(data.document_id === undefined).to.eql(false); });",
+                  "pm.environment.set('documentId', data.document_id);"
+                ]
+              }
+            }
+          ],
+          "id": "9df16f36-8465-4576-bd80-2d8e2bbd2b5d"
+        },
+        {
+          "name": "Get Document Metadata",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}/documents/{{documentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}",
+                "documents",
+                "{{documentId}}"
+              ]
+            }
+          },
+          "id": "c5354b3e-af0e-4b80-9759-24da74318d3b"
+        },
+        {
+          "name": "Submit Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}",
+                "submit"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('submit routes to under review', function () {",
+                  "  pm.expect(pm.response.json().status).to.eql('UNDER_REVIEW');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "id": "78ef4381-d9c9-45ee-9983-7f2bb203ad3f"
+        }
+      ],
+      "id": "01b3ac0c-5e70-4b82-beee-99a2e4db740c"
+    },
+    {
+      "name": "02 Reviewer AI and Decision",
+      "item": [
+        {
+          "name": "Queue AI Explanation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{reviewerSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REVIEWER",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}/ai-regeneration",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}",
+                "ai-regeneration"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var data = pm.response.json();",
+                  "pm.test('ai job id returned', function () { pm.expect(data.job_id === undefined).to.eql(false); });",
+                  "pm.environment.set('aiJobId', data.job_id);"
+                ]
+              }
+            }
+          ],
+          "id": "9712a6e8-db9d-4fdf-87bd-eb0f89ad5a43"
+        },
+        {
+          "name": "Claim AI Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "oic_instance_id",
+                  "value": "{{oicInstanceId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "correlation_id",
+                  "value": "POSTMAN-AI-{{testToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs/{{aiJobId}}/claim",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs",
+                "{{aiJobId}}",
+                "claim"
+              ]
+            }
+          },
+          "id": "342c037a-0930-4edd-9279-091103160c7d"
+        },
+        {
+          "name": "Complete AI Job with Gemini Result",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs/{{aiJobId}}/result?job_status=SUCCEEDED&response_reference=POSTMAN-AI-RESP-{{testToken}}&retryable=N&ai_summary=Postman%20Gemini%20summary%20for%20supplier%20{{testToken}}&ai_recommended_actions=Reviewer%20should%20verify%20tax%2C%20bank%2C%20duplicate%2C%20and%20justification%20evidence.&justification_quality=MEDIUM&model_name=gemini-postman",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs",
+                "{{aiJobId}}",
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "job_status",
+                  "value": "SUCCEEDED"
+                },
+                {
+                  "key": "response_reference",
+                  "value": "POSTMAN-AI-RESP-{{testToken}}"
+                },
+                {
+                  "key": "retryable",
+                  "value": "N"
+                },
+                {
+                  "key": "ai_summary",
+                  "value": "Postman%20Gemini%20summary%20for%20supplier%20{{testToken}}"
+                },
+                {
+                  "key": "ai_recommended_actions",
+                  "value": "Reviewer%20should%20verify%20tax%2C%20bank%2C%20duplicate%2C%20and%20justification%20evidence."
+                },
+                {
+                  "key": "justification_quality",
+                  "value": "MEDIUM"
+                },
+                {
+                  "key": "model_name",
+                  "value": "gemini-postman"
+                }
+              ]
+            }
+          },
+          "id": "4b276ab4-2419-416a-afaf-2e6e402d1365"
+        },
+        {
+          "name": "Apply +5 Justification Risk",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{reviewerSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REVIEWER",
+                  "type": "text"
+                },
+                {
+                  "key": "points",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Postman reviewer confirmed Gemini business-justification concern.",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}/justification-risk-adjustment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}",
+                "justification-risk-adjustment"
+              ]
+            }
+          },
+          "id": "18c8d930-6074-4b6b-9b4f-d60d125eb32f"
+        },
+        {
+          "name": "Get Reviewer Detail After Justification Risk",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}?actor_subject_id={{reviewerSubject}}&actor_roles=REVIEWER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{reviewerSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REVIEWER"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('reviewer adjustment is visible', function () {",
+                  "  var data = pm.response.json();",
+                  "  pm.expect(Number(data.reviewer_adjustment_points)).to.eql(5);",
+                  "  pm.expect(Number(data.risk_score) >= Number(data.deterministic_risk_score)).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "id": "2eacee82-e34b-4690-b294-7c0c14b1e01c"
+        },
+        {
+          "name": "Approve Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{reviewerSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REVIEWER",
+                  "type": "text"
+                },
+                {
+                  "key": "decision",
+                  "value": "APPROVE",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Postman reviewer approval after assessment.",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}",
+                "review"
+              ]
+            }
+          },
+          "id": "f27badde-ad08-418e-9603-f9d249d26698"
+        }
+      ],
+      "id": "b480c248-28a0-4678-b02c-6d8a2f52ba07"
+    },
+    {
+      "name": "03 OIC Fusion Success",
+      "item": [
+        {
+          "name": "Find Fusion Create Job",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs?type=FUSION_CREATE&status=READY&limit=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "FUSION_CREATE"
+                },
+                {
+                  "key": "status",
+                  "value": "READY"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var requestId = String(pm.environment.get('requestId'));",
+                  "var rows = pm.response.json().items || [];",
+                  "var match;",
+                  "rows.forEach(function (row) { if (String(row.request_id) === requestId) { match = row; } });",
+                  "pm.test('fusion create job found for request', function () { pm.expect(match === undefined).to.eql(false); });",
+                  "if (match) { pm.environment.set('fusionJobId', match.job_id); }"
+                ]
+              }
+            }
+          ],
+          "id": "47bc0172-f9fc-455f-a7da-bbe3ceed04b9"
+        },
+        {
+          "name": "Claim Fusion Create Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "oic_instance_id",
+                  "value": "{{oicInstanceId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "correlation_id",
+                  "value": "POSTMAN-FUSION-{{testToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs/{{fusionJobId}}/claim",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs",
+                "{{fusionJobId}}",
+                "claim"
+              ]
+            }
+          },
+          "id": "7b519f5d-57c5-4374-b1e6-3dc9809adcd1"
+        },
+        {
+          "name": "Complete Fusion Create Success",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs/{{fusionJobId}}/result?job_status=SUCCEEDED&response_reference=POSTMAN-FUSION-RESP-{{testToken}}&retryable=N&fusion_supplier_id=POSTMAN-FUSION-{{testToken}}&fusion_supplier_number=POSTMAN-FSN-{{testToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs",
+                "{{fusionJobId}}",
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "job_status",
+                  "value": "SUCCEEDED"
+                },
+                {
+                  "key": "response_reference",
+                  "value": "POSTMAN-FUSION-RESP-{{testToken}}"
+                },
+                {
+                  "key": "retryable",
+                  "value": "N"
+                },
+                {
+                  "key": "fusion_supplier_id",
+                  "value": "POSTMAN-FUSION-{{testToken}}"
+                },
+                {
+                  "key": "fusion_supplier_number",
+                  "value": "POSTMAN-FSN-{{testToken}}"
+                }
+              ]
+            }
+          },
+          "id": "adadbe65-f970-4161-8022-bf92f117d6a1"
+        },
+        {
+          "name": "Get Final Created In Fusion Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{requestId}}?actor_subject_id={{requesterSubject}}&actor_roles=REQUESTER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{requestId}}"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('request created in Fusion', function () {",
+                  "  var data = pm.response.json();",
+                  "  pm.expect(data.status).to.eql('CREATED_IN_FUSION');",
+                  "  pm.expect(data.fusion_supplier_number).to.contain('POSTMAN-FSN');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "id": "a48e4a82-394e-4a65-ba23-c839832be70b"
+        }
+      ],
+      "id": "76e35648-3043-4b73-a3ed-1b0f1fffd078"
+    },
+    {
+      "name": "04 Admin Config and Supplier Reference",
+      "item": [
+        {
+          "name": "Upsert Supplier Reference",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "fusion_supplier_id",
+                  "value": "POSTMAN-REF-{{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_number",
+                  "value": "POSTMAN-REFNUM-{{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_name",
+                  "value": "Postman Existing Supplier {{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_type",
+                  "value": "COMPANY",
+                  "type": "text"
+                },
+                {
+                  "key": "sync_id",
+                  "value": "POSTMAN-SYNC-{{testToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/supplier-reference/batch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-reference",
+                "batch"
+              ]
+            }
+          },
+          "id": "462d3c67-952a-4c77-b453-b86bc97bc828"
+        },
+        {
+          "name": "Activate High Risk Country XZ",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/high-risk-countries/XZ?actor_subject_id={{adminSubject}}&actor_roles=ADMIN&active=Y&reason=Postman%20local%20high-risk%20country%20test&source=Postman",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "high-risk-countries",
+                "XZ"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN"
+                },
+                {
+                  "key": "active",
+                  "value": "Y"
+                },
+                {
+                  "key": "reason",
+                  "value": "Postman%20local%20high-risk%20country%20test"
+                },
+                {
+                  "key": "source",
+                  "value": "Postman"
+                }
+              ]
+            }
+          },
+          "id": "33cf3950-b935-41af-90e1-477675139f13"
+        },
+        {
+          "name": "Confirm High Risk Country XZ",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/high-risk-countries?actor_subject_id={{adminSubject}}&actor_roles=ADMIN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "high-risk-countries"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var rows = pm.response.json().items || [];",
+                  "pm.test('XZ country exists and is active', function () {",
+                  "  var row;",
+                  "  rows.forEach(function (item) { if (item.country_code === 'XZ') { row = item; } });",
+                  "  pm.expect(row === undefined).to.eql(false);",
+                  "  pm.expect(row.active).to.eql('Y');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "id": "c4e98884-8604-48d8-b652-c6a19c980190"
+        },
+        {
+          "name": "Keep HIGH_EXPECTED_SPEND Weight at 5",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/risk-rules/HIGH_EXPECTED_SPEND?actor_subject_id={{adminSubject}}&actor_roles=ADMIN&weight=5&active=Y",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "risk-rules",
+                "HIGH_EXPECTED_SPEND"
+              ],
+              "query": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN"
+                },
+                {
+                  "key": "weight",
+                  "value": "5"
+                },
+                {
+                  "key": "active",
+                  "value": "Y"
+                }
+              ]
+            }
+          },
+          "id": "a38d23c3-8e21-4e27-a723-b791a5696012"
+        },
+        {
+          "name": "List Integration Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs?type=FUSION_CREATE&status=SUCCEEDED&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "FUSION_CREATE"
+                },
+                {
+                  "key": "status",
+                  "value": "SUCCEEDED"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            }
+          },
+          "id": "5c4f7878-d0cb-4975-b228-9eb36e60a631"
+        }
+      ],
+      "id": "94e93515-7634-4605-91ca-67096f6e155f"
+    },
+    {
+      "name": "05 Optional Retry Scenario",
+      "item": [
+        {
+          "name": "Create Retry Test Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER",
+                  "type": "text"
+                },
+                {
+                  "key": "requester_display_name",
+                  "value": "Amina Requester",
+                  "type": "text"
+                },
+                {
+                  "key": "requester_email",
+                  "value": "amina.requester@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_name",
+                  "value": "Postman Retry Supplier {{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_type",
+                  "value": "COMPANY",
+                  "type": "text"
+                },
+                {
+                  "key": "country_code",
+                  "value": "US",
+                  "type": "text"
+                },
+                {
+                  "key": "address_line1",
+                  "value": "200 Retry Avenue",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "Austin",
+                  "type": "text"
+                },
+                {
+                  "key": "contact_person",
+                  "value": "Riley Retry",
+                  "type": "text"
+                },
+                {
+                  "key": "contact_email",
+                  "value": "retry-{{testToken}}@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "business_unit",
+                  "value": "PROCUREMENT",
+                  "type": "text"
+                },
+                {
+                  "key": "business_justification",
+                  "value": "Postman retry scenario for integration failure.",
+                  "type": "text"
+                },
+                {
+                  "key": "product_service_category",
+                  "value": "Operations Services",
+                  "type": "text"
+                },
+                {
+                  "key": "expected_annual_spend",
+                  "value": "80000",
+                  "type": "text"
+                },
+                {
+                  "key": "currency_code",
+                  "value": "USD",
+                  "type": "text"
+                },
+                {
+                  "key": "tax_registration_number",
+                  "value": "TAX-RETRY-{{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "bank_country_code",
+                  "value": "US",
+                  "type": "text"
+                },
+                {
+                  "key": "bank_currency_code",
+                  "value": "USD",
+                  "type": "text"
+                },
+                {
+                  "key": "bank_account_raw",
+                  "value": "88000000{{testToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "site_name",
+                  "value": "Retry Site",
+                  "type": "text"
+                },
+                {
+                  "key": "site_address_line1",
+                  "value": "200 Retry Avenue",
+                  "type": "text"
+                },
+                {
+                  "key": "site_city",
+                  "value": "Austin",
+                  "type": "text"
+                },
+                {
+                  "key": "site_country_code",
+                  "value": "US",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var data = pm.response.json();",
+                  "pm.environment.set('retryRequestId', data.request_id);"
+                ]
+              }
+            }
+          ],
+          "id": "2b587c3b-3e65-428f-b057-2ba19eaf42c5"
+        },
+        {
+          "name": "Add Retry Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER",
+                  "type": "text"
+                },
+                {
+                  "key": "document_type",
+                  "value": "TAX_FORM",
+                  "type": "text"
+                },
+                {
+                  "key": "file_name",
+                  "value": "retry-tax-form-{{testToken}}.pdf",
+                  "type": "text"
+                },
+                {
+                  "key": "mime_type",
+                  "value": "application/pdf",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{retryRequestId}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{retryRequestId}}",
+                "documents"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('retryDocumentId', pm.response.json().document_id);"
+                ]
+              }
+            }
+          ],
+          "id": "2aeba705-b9bd-439c-8fd4-3c257ecb8eaf"
+        },
+        {
+          "name": "Submit Retry Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{requesterSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REQUESTER",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{retryRequestId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{retryRequestId}}",
+                "submit"
+              ]
+            }
+          },
+          "id": "ef430994-40d8-44ae-83b6-385f6094a88b"
+        },
+        {
+          "name": "Approve Retry Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{reviewerSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "REVIEWER",
+                  "type": "text"
+                },
+                {
+                  "key": "decision",
+                  "value": "APPROVE",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Postman retry test approval.",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{retryRequestId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{retryRequestId}}",
+                "review"
+              ]
+            }
+          },
+          "id": "a951fad1-5692-496e-9960-02c06049cb71"
+        },
+        {
+          "name": "Find Retry Fusion Job",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs?type=FUSION_CREATE&status=READY&limit=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "FUSION_CREATE"
+                },
+                {
+                  "key": "status",
+                  "value": "READY"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var retryRequestId = String(pm.environment.get('retryRequestId'));",
+                  "var rows = pm.response.json().items || [];",
+                  "var match;",
+                  "rows.forEach(function (row) { if (String(row.request_id) === retryRequestId) { match = row; } });",
+                  "pm.test('retry fusion job found', function () { pm.expect(match === undefined).to.eql(false); });",
+                  "if (match) { pm.environment.set('failedFusionJobId', match.job_id); }"
+                ]
+              }
+            }
+          ],
+          "id": "575872fb-c585-47d8-8e88-475be3534750"
+        },
+        {
+          "name": "Claim Retry Fusion Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "oic_instance_id",
+                  "value": "{{oicInstanceId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "correlation_id",
+                  "value": "POSTMAN-RETRY-{{testToken}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs/{{failedFusionJobId}}/claim",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs",
+                "{{failedFusionJobId}}",
+                "claim"
+              ]
+            }
+          },
+          "id": "67f5c54e-c292-4e70-9dbe-1d52238b3064"
+        },
+        {
+          "name": "Complete Retry Fusion Job as Failed",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integration-jobs/{{failedFusionJobId}}/result?job_status=FAILED&response_reference=POSTMAN-FAILED-RESP-{{testToken}}&error_type=POSTMAN_FAILURE&error_message=Postman%20simulated%20Fusion%20failure&retryable=Y",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integration-jobs",
+                "{{failedFusionJobId}}",
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "job_status",
+                  "value": "FAILED"
+                },
+                {
+                  "key": "response_reference",
+                  "value": "POSTMAN-FAILED-RESP-{{testToken}}"
+                },
+                {
+                  "key": "error_type",
+                  "value": "POSTMAN_FAILURE"
+                },
+                {
+                  "key": "error_message",
+                  "value": "Postman%20simulated%20Fusion%20failure"
+                },
+                {
+                  "key": "retryable",
+                  "value": "Y"
+                }
+              ]
+            }
+          },
+          "id": "d6669b73-7954-4943-a043-2e2316b03f4d"
+        },
+        {
+          "name": "Admin Retry Latest Failed Request Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "actor_subject_id",
+                  "value": "{{adminSubject}}",
+                  "type": "text"
+                },
+                {
+                  "key": "actor_roles",
+                  "value": "ADMIN",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requests/{{retryRequestId}}/retry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requests",
+                "{{retryRequestId}}",
+                "retry"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var data = pm.response.json();",
+                  "pm.test('retry job returned', function () { pm.expect(data.job_id === undefined).to.eql(false); });",
+                  "pm.environment.set('retryJobId', data.job_id);"
+                ]
+              }
+            }
+          ],
+          "id": "acbb3182-5ef8-44ac-b3a2-95a8e98141af"
+        }
+      ],
+      "id": "a2fd5730-f587-4b95-831c-92ff774c68b9"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/ords/supplier-onboarding/v1",
+      "type": "string"
+    },
+    {
+      "key": "requesterSubject",
+      "value": "REQ_AMINA_SUB",
+      "type": "string"
+    },
+    {
+      "key": "reviewerSubject",
+      "value": "REV_PRIYA_SUB",
+      "type": "string"
+    },
+    {
+      "key": "adminSubject",
+      "value": "ADM_LINDA_SUB",
+      "type": "string"
+    },
+    {
+      "key": "oicInstanceId",
+      "value": "OIC-POSTMAN-LOCAL",
+      "type": "string"
+    }
+  ]
+}

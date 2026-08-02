@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test:frontend": "node tests/frontend/smoke-visual-builder.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
+  }
+}
