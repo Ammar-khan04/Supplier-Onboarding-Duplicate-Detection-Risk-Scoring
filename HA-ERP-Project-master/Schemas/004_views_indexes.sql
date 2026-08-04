@@ -185,6 +185,20 @@ select
   updated_at
 from risk_score_band_config;
 
+create or replace view request_document_v as
+select
+  document_id,
+  request_id,
+  request_version,
+  document_type,
+  file_name,
+  mime_type,
+  is_latest,
+  uploaded_by_subject_id,
+  uploaded_at,
+  nvl(dbms_lob.getlength(document_content), 0) as file_size
+from request_document;
+
 create index supplier_request_status_ix on supplier_request (status, updated_at);
 create index supplier_request_requester_ix on supplier_request (requester_subject_id, status, updated_at);
 create index supplier_request_risk_ix on supplier_request (risk_level, risk_score, updated_at);

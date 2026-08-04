@@ -283,20 +283,73 @@ begin
    ords.define_handler(
       p_module_name => 'ha_supplier_onboarding_v1',
       p_pattern     => 'requests/:request_id/documents',
+      p_method      => 'GET',
+      p_source_type => ords.source_type_collection_feed,
+      p_source      => q'[
+      select
+        document_id,
+        request_id,
+        request_version,
+        document_type,
+        file_name,
+        mime_type,
+        is_latest,
+        uploaded_by_subject_id,
+        uploaded_at,
+        nvl(dbms_lob.getlength(document_content), 0) as file_size
+      from request_document
+      where request_id = to_number(:request_id)
+        and is_latest = 'Y'
+      order by uploaded_at desc
+    ]'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'requests/:request_id/documents',
       p_method      => 'POST',
       p_source_type => ords.source_type_plsql,
       p_source      => q'[
       declare
         l_document_id number;
+        l_b64 clob;
+        l_doc_type varchar2(100);
+        l_file_name varchar2(255);
+        l_mime_type varchar2(100);
       begin
+        begin
+          if :body_text is not null then
+            l_b64 := json_value(:body_text, '$.document_content_base64' returning clob);
+            l_doc_type := json_value(:body_text, '$.document_type');
+            l_file_name := json_value(:body_text, '$.file_name');
+            l_mime_type := json_value(:body_text, '$.mime_type');
+          end if;
+        exception
+          when others then
+            null;
+        end;
+
+        if l_b64 is null then
+          l_b64 := :document_content_base64;
+        end if;
+        if l_doc_type is null then
+          l_doc_type := :document_type;
+        end if;
+        if l_file_name is null then
+          l_file_name := :file_name;
+        end if;
+        if l_mime_type is null then
+          l_mime_type := :mime_type;
+        end if;
+
         supplier_request_pkg.add_document(
           p_actor_subject_id => coalesce(:actor_subject_id, 'REQ_AMINA_SUB'),
           p_actor_roles => coalesce(:actor_roles, 'REQUESTER'),
           p_request_id => to_number(:request_id),
-          p_document_type => :document_type,
-          p_file_name => :file_name,
-          p_mime_type => :mime_type,
+          p_document_type => l_doc_type,
+          p_file_name => l_file_name,
+          p_mime_type => l_mime_type,
           p_document_content => null,
+          p_document_content_base64 => l_b64,
           p_document_id => l_document_id
         );
         :status_code := 201;
@@ -326,7 +379,45 @@ begin
         is_latest,
         uploaded_by_subject_id,
         uploaded_at,
-        dbms_lob.getlength(document_content) as content_length
+        nvl(dbms_lob.getlength(document_content), 0) as file_size
+      from request_document
+      where request_id = to_number(:request_id)
+        and document_id = to_number(:document_id)
+    ]'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'requests/:request_id/documents/:document_id',
+      p_method      => 'DELETE',
+      p_source_type => ords.source_type_plsql,
+      p_source      => q'[
+      begin
+        supplier_request_pkg.delete_document(
+          p_actor_subject_id => coalesce(:actor_subject_id, 'REQ_AMINA_SUB'),
+          p_actor_roles => coalesce(:actor_roles, 'REQUESTER'),
+          p_request_id => to_number(:request_id),
+          p_document_id => to_number(:document_id)
+        );
+        :status_code := 200;
+        owa_util.mime_header('application/json', true);
+        htp.p('{"status":"DELETED","document_id":' || to_char(:document_id) || '}');
+      end;
+    ]'
+   );
+
+   ords.define_template(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'requests/:request_id/documents/:document_id/content'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'requests/:request_id/documents/:document_id/content',
+      p_method      => 'GET',
+      p_source_type => ords.source_type_media,
+      p_source      => q'[
+      select
+        nvl(mime_type, 'application/pdf') as mime_type,
+        document_content
       from request_document
       where request_id = to_number(:request_id)
         and document_id = to_number(:document_id)
@@ -628,6 +719,44 @@ begin
         owa_util.mime_header('application/json', true);
         htp.p('{
   "status": "risk_rule_updated"
+}');
+      end;
+    ]'
+   );
+
+   ords.define_template(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'risk-bands'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'risk-bands',
+      p_method      => 'GET',
+      p_source_type => ords.source_type_collection_feed,
+      p_source      => 'select risk_level, min_score, max_score, active, display_order, updated_by_subject_id, updated_at from risk_score_band_config order by min_score'
+   );
+
+   ords.define_template(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'risk-bands/:risk_level'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'risk-bands/:risk_level',
+      p_method      => 'PUT',
+      p_source_type => ords.source_type_plsql,
+      p_source      => q'[
+      begin
+        supplier_auth_pkg.require_role(coalesce(:actor_roles, 'ADMIN'), 'ADMIN');
+        supplier_config_pkg.update_risk_score_band(
+          p_actor_subject_id => coalesce(:actor_subject_id, 'ADM_LINDA_SUB'),
+          p_risk_level => :risk_level,
+          p_min_score => to_number(:min_score),
+          p_max_score => to_number(:max_score)
+        );
+        owa_util.mime_header('application/json', true);
+        htp.p('{
+  "status": "risk_band_updated"
 }');
       end;
     ]'

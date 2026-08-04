@@ -1,0 +1,3204 @@
+{
+  "title": "Supplier Portal",
+  "description": "VB Page Configuration",
+  "variables": {
+    "currentRequestId": {
+      "type": "string"
+    },
+    "currentRequestStatus": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "currentRequestReadOnly": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "currentRole": {
+      "type": "string",
+      "defaultValue": "REQUESTER"
+    },
+    "currentTab": {
+      "type": "string",
+      "defaultValue": "dashboard"
+    },
+    "newRequest": {
+      "type": "object",
+      "defaultValue": {
+        "requester_display_name": "Priya Sharma",
+        "requester_email": "priya.sharma@example.com",
+        "supplier_name": "Al Noor Trading LLC",
+        "supplier_type": "COMPANY",
+        "country_code": "PK",
+        "address_line1": "12 Main Road",
+        "city": "Karachi",
+        "state_or_province": "Sindh",
+        "postal_code": "74000",
+        "contact_person": "Ali Khan",
+        "contact_email": "ali@alnoor.example",
+        "contact_phone": "+92-21-5550100",
+        "business_unit": "PK_OPERATIONS",
+        "business_justification": "Needed to provide equipment maintenance for Plant A while the current vendor is unavailable.",
+        "product_service_category": "MAINTENANCE",
+        "expected_annual_spend": 150000,
+        "currency_code": "USD",
+        "tax_registration_number": "PK-1234567",
+        "bank_country_code": "PK",
+        "bank_currency_code": "PKR",
+        "bank_account_raw": "1234567890",
+        "site_name": "KARACHI_SITE",
+        "site_address_line1": "12 Main Road, Karachi",
+        "site_city": "Karachi",
+        "site_country_code": "PK"
+      }
+    },
+    "allRequests": {
+      "type": "any[]",
+      "defaultValue": []
+    },
+    "dashboardLoading": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "dashboardLoadError": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "filterBusinessUnit": {
+      "type": "string",
+      "defaultValue": "ALL"
+    },
+    "filterStatus": {
+      "type": "string",
+      "defaultValue": "ALL"
+    },
+    "filterRiskLevel": {
+      "type": "string",
+      "defaultValue": "ALL"
+    },
+    "filterDuplicateLevel": {
+      "type": "string",
+      "defaultValue": "ALL"
+    },
+    "filteredRequestsADP": {
+      "type": "vb/ArrayDataProvider2",
+      "defaultValue": {
+        "data": "{{ $functions.filterRequests($variables.allRequests, $variables.filterBusinessUnit, $variables.filterStatus, $variables.filterRiskLevel, $variables.filterDuplicateLevel) }}",
+        "keyAttributes": "request_id"
+      }
+    },
+    "selectedDocumentType": {
+      "type": "string",
+      "defaultValue": "TAX_CERTIFICATE"
+    },
+    "selectedDocumentFile": {
+      "type": "object",
+      "defaultValue": null
+    },
+    "documentUploadBusy": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "sessionDocuments": {
+      "type": "any[]",
+      "defaultValue": []
+    },
+    "reviewDetail": {
+      "type": "object",
+      "defaultValue": {}
+    },
+    "reviewDetailLoading": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "reviewDetailDocuments": {
+      "type": "object[]",
+      "defaultValue": []
+    },
+    "reviewDecision": {
+      "type": "object",
+      "defaultValue": {
+        "decision": "",
+        "reason": "",
+        "existing_supplier_id": ""
+      }
+    },
+    "reviewDecisionBusy": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "reviewDecisionError": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "integrationLogs": {
+      "type": "any[]",
+      "defaultValue": []
+    },
+    "justAdj": {
+      "type": "object",
+      "defaultValue": {
+        "points": 0,
+        "reason": ""
+      }
+    },
+    "justAdjBusy": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "justAdjMessage": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "riskRules": {
+      "type": "any[]",
+      "defaultValue": []
+    },
+    "highRiskCountries": {
+      "type": "any[]",
+      "defaultValue": []
+    },
+    "adminConfigLoading": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "adminConfigError": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "ruleUpdateBusy": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "ruleUpdateMessage": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "countryUpdateBusy": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "countryUpdateMessage": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "newCountryCode": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "newCountryReason": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "newCountrySource": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "integrationLogsLoading": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "integrationLogsError": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "filterLogStatus": {
+      "type": "string",
+      "defaultValue": "ALL"
+    },
+    "filterLogType": {
+      "type": "string",
+      "defaultValue": "ALL"
+    },
+    "filteredLogsADP": {
+      "type": "vb/ArrayDataProvider2",
+      "defaultValue": {
+        "data": "{{ $functions.filterLogs($variables.integrationLogs, $variables.filterLogStatus, $variables.filterLogType) }}",
+        "keyAttributes": "job_id"
+      }
+    },
+    "retryBusyId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "actionHistory": {
+      "type": "any[]",
+      "defaultValue": []
+    },
+    "actionHistoryLoading": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "actionHistoryError": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "filterHistoryActionType": {
+      "type": "string",
+      "defaultValue": "ALL"
+    },
+    "filterHistoryRequestId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "filteredHistoryADP": {
+      "type": "vb/ArrayDataProvider2",
+      "defaultValue": {
+        "data": "{{ $functions.filterHistory($variables.actionHistory, $variables.filterHistoryActionType, $variables.filterHistoryRequestId) }}",
+        "keyAttributes": "history_id"
+      }
+    },
+    "totalBaseWeight": {
+      "type": "number",
+      "defaultValue": 0
+    },
+    "riskBands": {
+      "type": "any[]",
+      "defaultValue": []
+    },
+    "totalBandsValid": {
+      "type": "boolean",
+      "defaultValue": true
+    },
+    "bandUpdateBusy": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "bandUpdateMessage": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "selectedDocumentFileName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "selectedDocumentBase64": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "selectedDocumentMimeType": {
+      "type": "string",
+      "defaultValue": "application/pdf"
+    },
+    "selectedDocumentFileSize": {
+      "type": "number",
+      "defaultValue": 0
+    },
+    "documentDeleteBusy": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "requesterDocuments": {
+      "type": "object[]",
+      "defaultValue": []
+    }
+  },
+  "eventListeners": {
+    "vbEnter": {
+      "chains": [
+        {
+          "chainId": "loadDashboardDataChain"
+        }
+      ]
+    },
+    "onSelectRequester": {
+      "chains": [
+        {
+          "chainId": "switchRoleChain",
+          "parameters": {
+            "role": "REQUESTER"
+          }
+        }
+      ]
+    },
+    "onSelectReviewer": {
+      "chains": [
+        {
+          "chainId": "switchRoleChain",
+          "parameters": {
+            "role": "REVIEWER"
+          }
+        }
+      ]
+    },
+    "onSelectAdmin": {
+      "chains": [
+        {
+          "chainId": "switchRoleChain",
+          "parameters": {
+            "role": "ADMIN"
+          }
+        }
+      ]
+    },
+    "onSelectDashboard": {
+      "chains": [
+        {
+          "chainId": "switchTabChain",
+          "parameters": {
+            "tab": "dashboard"
+          }
+        }
+      ]
+    },
+    "onSelectNewRequest": {
+      "chains": [
+        {
+          "chainId": "clearRequestChain"
+        }
+      ]
+    },
+    "onSelectErpMaster": {
+      "chains": [
+        {
+          "chainId": "switchTabChain",
+          "parameters": {
+            "tab": "erp-master"
+          }
+        }
+      ]
+    },
+    "onSelectIntegrationLogs": {
+      "chains": [
+        {
+          "chainId": "openIntegrationLogsChain"
+        }
+      ]
+    },
+    "onSaveDraft": {
+      "chains": [
+        {
+          "chainId": "saveDraftChain"
+        }
+      ]
+    },
+    "onSubmitRequest": {
+      "chains": [
+        {
+          "chainId": "submitRequestChain"
+        }
+      ]
+    },
+    "onRefreshDashboard": {
+      "chains": [
+        {
+          "chainId": "loadDashboardDataChain"
+        }
+      ]
+    },
+    "onGoToNewRequest": {
+      "chains": [
+        {
+          "chainId": "clearRequestChain"
+        }
+      ]
+    },
+    "onViewRequest": {
+      "chains": [
+        {
+          "chainId": "viewRequestChain",
+          "parameters": {
+            "requestId": "{{ $event.currentTarget.dataset.requestId }}"
+          }
+        }
+      ]
+    },
+    "onApplyJustAdj": {
+      "chains": [
+        {
+          "chainId": "applyJustAdjChain"
+        }
+      ]
+    },
+    "onReviewRequest": {
+      "chains": [
+        {
+          "chainId": "openReviewDetailChain",
+          "parameters": {
+            "requestId": "{{ $event.currentTarget.dataset.requestId }}"
+          }
+        }
+      ]
+    },
+    "onBackToDashboard": {
+      "chains": [
+        {
+          "chainId": "backToDashboardChain"
+        }
+      ]
+    },
+    "onRefreshReviewDetail": {
+      "chains": [
+        {
+          "chainId": "refreshReviewDetailChain"
+        }
+      ]
+    },
+    "onDecisionChange": {
+      "chains": [
+        {
+          "chainId": "onDecisionChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onDecisionReasonInput": {
+      "chains": [
+        {
+          "chainId": "onDecisionReasonInputChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onExistingSupplierIdInput": {
+      "chains": [
+        {
+          "chainId": "onExistingSupplierIdInputChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onJustAdjPointsChange": {
+      "chains": [
+        {
+          "chainId": "onJustAdjPointsChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onJustAdjReasonInput": {
+      "chains": [
+        {
+          "chainId": "onJustAdjReasonInputChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onSubmitDecision": {
+      "chains": [
+        {
+          "chainId": "submitDecisionChain"
+        }
+      ]
+    },
+    "onClearDecision": {
+      "chains": [
+        {
+          "chainId": "clearDecisionChain"
+        }
+      ]
+    },
+    "onQuickFilterPending": {
+      "chains": [
+        {
+          "chainId": "quickFilterPendingChain"
+        }
+      ]
+    },
+    "onQuickFilterHighRisk": {
+      "chains": [
+        {
+          "chainId": "quickFilterHighRiskChain"
+        }
+      ]
+    },
+    "onQuickFilterDuplicate": {
+      "chains": [
+        {
+          "chainId": "quickFilterDuplicateChain"
+        }
+      ]
+    },
+    "onQuickFilterAll": {
+      "chains": [
+        {
+          "chainId": "quickFilterAllChain"
+        }
+      ]
+    },
+    "onFilterBusinessUnitChange": {
+      "chains": [
+        {
+          "chainId": "onFilterBusinessUnitChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onFilterStatusChange": {
+      "chains": [
+        {
+          "chainId": "onFilterStatusChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onFilterRiskLevelChange": {
+      "chains": [
+        {
+          "chainId": "onFilterRiskLevelChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onFilterDuplicateLevelChange": {
+      "chains": [
+        {
+          "chainId": "onFilterDuplicateLevelChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onFilterLogStatusChange": {
+      "chains": [
+        {
+          "chainId": "onFilterLogStatusChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onFilterLogTypeChange": {
+      "chains": [
+        {
+          "chainId": "onFilterLogTypeChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onRefreshLogs": {
+      "chains": [
+        {
+          "chainId": "loadIntegrationLogsChain"
+        }
+      ]
+    },
+    "onRetryRequest": {
+      "chains": [
+        {
+          "chainId": "retryRequestChain",
+          "parameters": {
+            "requestId": "{{ $event.currentTarget.dataset.requestId }}"
+          }
+        }
+      ]
+    },
+    "onDocumentTypeChange": {
+      "chains": [
+        {
+          "chainId": "onDocumentTypeChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onDocumentFileSelected": {
+      "chains": [
+        {
+          "chainId": "onDocumentFileSelectedChain",
+          "parameters": {
+            "event": "{{ $event }}"
+          }
+        }
+      ]
+    },
+    "onUploadDocument": {
+      "chains": [
+        {
+          "chainId": "uploadDocumentChain"
+        }
+      ]
+    },
+    "onSelectActionHistory": {
+      "chains": [
+        {
+          "chainId": "openActionHistoryChain"
+        }
+      ]
+    },
+    "onRefreshHistory": {
+      "chains": [
+        {
+          "chainId": "loadActionHistoryChain"
+        }
+      ]
+    },
+    "onSelectAdminConfig": {
+      "chains": [
+        {
+          "chainId": "openAdminConfigChain"
+        }
+      ]
+    },
+    "onRefreshAdminConfig": {
+      "chains": [
+        {
+          "chainId": "loadAdminConfigChain"
+        }
+      ]
+    },
+    "onNewCountryCodeInput": {
+      "chains": [
+        {
+          "chainId": "onNewCountryCodeInputChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onNewCountryReasonInput": {
+      "chains": [
+        {
+          "chainId": "onNewCountryReasonInputChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onNewCountrySourceInput": {
+      "chains": [
+        {
+          "chainId": "onNewCountrySourceInputChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onAddHighRiskCountry": {
+      "chains": [
+        {
+          "chainId": "addHighRiskCountryChain"
+        }
+      ]
+    },
+    "onDeactivateCountry": {
+      "chains": [
+        {
+          "chainId": "updateCountryStatusChain",
+          "parameters": {
+            "countryCode": "{{ $event.currentTarget.dataset.countryCode }}",
+            "active": "N"
+          }
+        }
+      ]
+    },
+    "onReactivateCountry": {
+      "chains": [
+        {
+          "chainId": "updateCountryStatusChain",
+          "parameters": {
+            "countryCode": "{{ $event.currentTarget.dataset.countryCode }}",
+            "active": "Y"
+          }
+        }
+      ]
+    },
+    "onFilterHistoryActionTypeChange": {
+      "chains": [
+        {
+          "chainId": "onFilterHistoryActionTypeChangeChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onFilterHistoryRequestIdInput": {
+      "chains": [
+        {
+          "chainId": "onFilterHistoryRequestIdInputChain",
+          "parameters": {
+            "value": "{{ $event.target.value }}"
+          }
+        }
+      ]
+    },
+    "onRuleWeightChange": {
+      "chains": [
+        {
+          "chainId": "onRuleWeightChangeChain"
+        }
+      ]
+    },
+    "onSaveAllRules": {
+      "chains": [
+        {
+          "chainId": "saveAllRulesChain"
+        }
+      ]
+    },
+    "onBandScoreChange": {
+      "chains": [
+        {
+          "chainId": "onBandScoreChangeChain"
+        }
+      ]
+    },
+    "onSaveAllBands": {
+      "chains": [
+        {
+          "chainId": "saveAllBandsChain"
+        }
+      ]
+    },
+    "onDeleteDocument": {
+      "chains": [
+        {
+          "chainId": "deleteDocumentChain",
+          "parameters": {
+            "documentId": "{{ $event.currentTarget.dataset.documentId }}"
+          }
+        }
+      ]
+    }
+  },
+  "chains": {
+    "openAdminConfigChain": {
+      "root": "setTab",
+      "actions": {
+        "setTab": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "admin-config"
+            }
+          },
+          "outcomes": {
+            "success": "loadData"
+          }
+        },
+        "loadData": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadAdminConfigChain"
+          }
+        }
+      }
+    },
+    "loadAdminConfigChain": {
+      "root": "setLoading",
+      "actions": {
+        "setLoading": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.adminConfigLoading": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.adminConfigError": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "fetchRules"
+          }
+        },
+        "fetchRules": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRiskRules",
+            "uriParams": {
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchCountries",
+            "failure": "loadError"
+          }
+        },
+        "fetchCountries": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getHighRiskCountries",
+            "uriParams": {
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchBands",
+            "failure": "loadError"
+          }
+        },
+        "assignData": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.riskRules": {
+              "source": "{{ $chain.results.fetchRules.body.items || [] }}"
+            },
+            "$page.variables.highRiskCountries": {
+              "source": "{{ $chain.results.fetchCountries.body.items || [] }}"
+            },
+            "$page.variables.adminConfigLoading": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.totalBaseWeight": {
+              "source": "{{ $functions.computeBaseRulesTotal($chain.results.fetchRules.body.items || []) }}"
+            },
+            "$page.variables.riskBands": {
+              "source": "{{ $chain.results.fetchBands.body.items || [] }}"
+            },
+            "$page.variables.totalBandsValid": {
+              "source": "{{ $functions.computeRiskBandsValid($chain.results.fetchBands.body.items || []) }}"
+            }
+          }
+        },
+        "loadError": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.adminConfigLoading": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.adminConfigError": {
+              "source": "Failed to load configuration. Check ORDS connectivity."
+            }
+          }
+        },
+        "fetchBands": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRiskBands",
+            "uriParams": {
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignData",
+            "failure": "loadError"
+          }
+        }
+      }
+    },
+    "onNewCountryCodeInputChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "set",
+      "actions": {
+        "set": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.newCountryCode": {
+              "source": "{{ $chain.variables.value.toUpperCase() }}"
+            }
+          }
+        }
+      }
+    },
+    "onNewCountryReasonInputChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "set",
+      "actions": {
+        "set": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.newCountryReason": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onNewCountrySourceInputChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "set",
+      "actions": {
+        "set": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.newCountrySource": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "addHighRiskCountryChain": {
+      "root": "setBusy",
+      "actions": {
+        "setBusy": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.countryUpdateBusy": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.countryUpdateMessage": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "callPUT"
+          }
+        },
+        "callPUT": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/updateHighRiskCountry",
+            "uriParams": {
+              "country_code": "{{ $page.variables.newCountryCode }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": {
+              "active": "Y",
+              "reason": "{{ $page.variables.newCountryReason }}",
+              "source": "{{ $page.variables.newCountrySource }}"
+            }
+          },
+          "outcomes": {
+            "success": "addSuccess",
+            "failure": "addError"
+          }
+        },
+        "addSuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.countryUpdateBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.newCountryCode": {
+              "source": ""
+            },
+            "$page.variables.newCountryReason": {
+              "source": ""
+            },
+            "$page.variables.newCountrySource": {
+              "source": ""
+            },
+            "$page.variables.countryUpdateMessage": {
+              "source": "Country added successfully."
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "addError": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.countryUpdateBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.countryUpdateMessage": {
+              "source": "Error: Failed to add country. Check that the code is valid ISO alpha-2."
+            }
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadAdminConfigChain"
+          }
+        }
+      }
+    },
+    "updateCountryStatusChain": {
+      "variables": {
+        "countryCode": {
+          "type": "string",
+          "input": "fromCaller"
+        },
+        "active": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setBusy",
+      "actions": {
+        "setBusy": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.countryUpdateBusy": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.countryUpdateMessage": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "callPUT"
+          }
+        },
+        "callPUT": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/updateHighRiskCountry",
+            "uriParams": {
+              "country_code": "{{ $chain.variables.countryCode }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": {
+              "active": "{{ $chain.variables.active }}"
+            }
+          },
+          "outcomes": {
+            "success": "statusSuccess",
+            "failure": "statusError"
+          }
+        },
+        "statusSuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.countryUpdateBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.countryUpdateMessage": {
+              "source": "Country status updated."
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "statusError": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.countryUpdateBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.countryUpdateMessage": {
+              "source": "Error: Failed to update country status."
+            }
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadAdminConfigChain"
+          }
+        }
+      }
+    },
+    "applyJustAdjChain": {
+      "root": "setBusy",
+      "actions": {
+        "setBusy": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.justAdjBusy": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.justAdjMessage": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "callAdjustREST"
+          }
+        },
+        "callAdjustREST": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/applyJustificationRiskAdjustment",
+            "uriParams": {
+              "request_id": "{{ $page.variables.reviewDetail.request_id }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": "{{ $page.variables.justAdj }}"
+          },
+          "outcomes": {
+            "success": "adjSuccess",
+            "failure": "adjFailure"
+          }
+        },
+        "adjSuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.justAdjBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.justAdjMessage": {
+              "source": "Adjustment applied successfully."
+            },
+            "$page.variables.justAdj": {
+              "source": {
+                "points": 0,
+                "reason": ""
+              }
+            }
+          },
+          "outcomes": {
+            "success": "reloadDetail"
+          }
+        },
+        "adjFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.justAdjBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.justAdjMessage": {
+              "source": "Failed to apply adjustment. Please try again."
+            }
+          }
+        },
+        "reloadDetail": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadReviewDetailChain"
+          }
+        }
+      }
+    },
+    "switchRoleChain": {
+      "variables": {
+        "role": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setRole",
+      "actions": {
+        "setRole": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentRole": {
+              "source": "{{ $chain.variables.role }}"
+            }
+          },
+          "outcomes": {
+            "success": "resetToDashboard"
+          }
+        },
+        "resetToDashboard": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "dashboard"
+            }
+          },
+          "outcomes": {
+            "success": "reloadDashboardOnRoleSwitch"
+          }
+        },
+        "reloadDashboardOnRoleSwitch": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadDashboardDataChain"
+          }
+        }
+      }
+    },
+    "switchTabChain": {
+      "variables": {
+        "tab": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setTab",
+      "actions": {
+        "setTab": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "{{ $chain.variables.tab }}"
+            }
+          }
+        }
+      }
+    },
+    "loadDashboardDataChain": {
+      "root": "setLoadingTrue",
+      "actions": {
+        "setLoadingTrue": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.dashboardLoading": {
+              "source": "{{ true }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchRequests"
+          }
+        },
+        "fetchRequests": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRequests",
+            "uriParams": {
+              "limit": 500,
+              "offset": 0,
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignAllRequests",
+            "failure": "handleLoadFailure"
+          }
+        },
+        "assignAllRequests": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.allRequests": {
+              "source": "{{ $chain.results.fetchRequests.body.items }}"
+            },
+            "$page.variables.dashboardLoadError": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "setLoadingFalseSuccess"
+          }
+        },
+        "setLoadingFalseSuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.dashboardLoading": {
+              "source": "{{ false }}"
+            }
+          }
+        },
+        "handleLoadFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.dashboardLoadError": {
+              "source": "Unable to load supplier requests from ORDS. Check the connection and try Refresh Queue again."
+            }
+          },
+          "outcomes": {
+            "success": "notifyLoadFailure"
+          }
+        },
+        "notifyLoadFailure": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "{{ $page.variables.dashboardLoadError }}",
+            "type": "error"
+          },
+          "outcomes": {
+            "success": "setLoadingFalseFailure"
+          }
+        },
+        "setLoadingFalseFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.dashboardLoading": {
+              "source": "{{ false }}"
+            }
+          }
+        }
+      }
+    },
+    "openReviewDetailChain": {
+      "variables": {
+        "requestId": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setCurrentId",
+      "actions": {
+        "setCurrentId": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentRequestId": {
+              "source": "{{ $chain.variables.requestId }}"
+            },
+            "$page.variables.reviewDetail": {
+              "source": {}
+            },
+            "$page.variables.reviewDetailDocuments": {
+              "source": []
+            },
+            "$page.variables.reviewDetailLoading": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.reviewDecision": {
+              "source": {
+                "decision": "",
+                "reason": "",
+                "existing_supplier_id": ""
+              }
+            },
+            "$page.variables.reviewDecisionError": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "goToReviewTab"
+          }
+        },
+        "goToReviewTab": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "review-detail"
+            }
+          },
+          "outcomes": {
+            "success": "fetchReviewDetail"
+          }
+        },
+        "fetchReviewDetail": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRequest",
+            "uriParams": {
+              "request_id": "{{ $chain.variables.requestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignReviewDetail",
+            "failure": "handleDetailFailure"
+          }
+        },
+        "assignReviewDetail": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetail": {
+              "source": "{{ $chain.results.fetchReviewDetail.body }}"
+            },
+            "$page.variables.reviewDetailLoading": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchReviewDocsREST"
+          }
+        },
+        "handleDetailFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetailLoading": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "notifyDetailFailure"
+          }
+        },
+        "notifyDetailFailure": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Failed to load request details. Check ORDS connectivity.",
+            "type": "error"
+          }
+        },
+        "fetchReviewDocsREST": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRequestDocuments",
+            "uriParams": {
+              "request_id": "{{ $chain.variables.requestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignReviewDocs",
+            "failure": "clearReviewDocs"
+          }
+        },
+        "assignReviewDocs": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetailDocuments": {
+              "source": "{{ $chain.results.fetchReviewDocsREST.body.items || [] }}"
+            }
+          }
+        },
+        "clearReviewDocs": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetailDocuments": {
+              "source": []
+            }
+          }
+        }
+      }
+    },
+    "refreshReviewDetailChain": {
+      "root": "setLoadingForRefresh",
+      "actions": {
+        "setLoadingForRefresh": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetailLoading": {
+              "source": "{{ true }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchForRefresh"
+          }
+        },
+        "fetchForRefresh": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRequest",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignRefreshedDetail",
+            "failure": "setLoadingFalseOnRefreshFail"
+          }
+        },
+        "assignRefreshedDetail": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetail": {
+              "source": "{{ $chain.results.fetchForRefresh.body }}"
+            },
+            "$page.variables.reviewDetailLoading": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchRefreshedDocsREST"
+          }
+        },
+        "setLoadingFalseOnRefreshFail": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetailLoading": {
+              "source": "{{ false }}"
+            }
+          }
+        },
+        "fetchRefreshedDocsREST": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRequestDocuments",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignRefreshedDocs",
+            "failure": "clearRefreshedDocs"
+          }
+        },
+        "assignRefreshedDocs": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetailDocuments": {
+              "source": "{{ $chain.results.fetchRefreshedDocsREST.body.items || [] }}"
+            }
+          }
+        },
+        "clearRefreshedDocs": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDetailDocuments": {
+              "source": []
+            }
+          }
+        }
+      }
+    },
+    "backToDashboardChain": {
+      "root": "clearDetailAndGoBack",
+      "actions": {
+        "clearDetailAndGoBack": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "dashboard"
+            },
+            "$page.variables.reviewDetail": {
+              "source": {}
+            },
+            "$page.variables.reviewDetailDocuments": {
+              "source": []
+            },
+            "$page.variables.reviewDecision": {
+              "source": {
+                "decision": "",
+                "reason": "",
+                "existing_supplier_id": ""
+              }
+            },
+            "$page.variables.reviewDecisionError": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "reloadDashboard"
+          }
+        },
+        "reloadDashboard": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadDashboardDataChain"
+          }
+        }
+      }
+    },
+    "submitDecisionChain": {
+      "root": "validateDecision",
+      "actions": {
+        "validateDecision": {
+          "module": "vb/action/builtin/callModuleFunctionAction",
+          "parameters": {
+            "module": "[[ $functions ]]",
+            "functionName": "validateDecision",
+            "params": [
+              "{{ $page.variables.reviewDecision }}"
+            ]
+          },
+          "outcomes": {
+            "success": "checkValidation"
+          }
+        },
+        "checkValidation": {
+          "module": "vb/action/builtin/ifAction",
+          "parameters": {
+            "condition": "{{ $chain.results.validateDecision.valid === true }}"
+          },
+          "outcomes": {
+            "true": "setBusyTrue",
+            "false": "setValidationError"
+          }
+        },
+        "setValidationError": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecisionError": {
+              "source": "{{ $chain.results.validateDecision.error }}"
+            }
+          }
+        },
+        "setBusyTrue": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecisionBusy": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.reviewDecisionError": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "callDecideREST"
+          }
+        },
+        "callDecideREST": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/decideRequest",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": {
+              "decision": "{{ $page.variables.reviewDecision.decision }}",
+              "reason": "{{ $page.variables.reviewDecision.reason }}",
+              "existing_supplier_id": "{{ $page.variables.reviewDecision.existing_supplier_id }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "decisionSuccess",
+            "failure": "decisionFailure"
+          }
+        },
+        "decisionSuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecisionBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.reviewDecision": {
+              "source": {
+                "decision": "",
+                "reason": "",
+                "existing_supplier_id": ""
+              }
+            }
+          },
+          "outcomes": {
+            "success": "notifySuccess"
+          }
+        },
+        "notifySuccess": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Decision submitted successfully.",
+            "type": "confirmation"
+          },
+          "outcomes": {
+            "success": "refreshAfterDecision"
+          }
+        },
+        "refreshAfterDecision": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "refreshReviewDetailChain"
+          }
+        },
+        "decisionFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecisionBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.reviewDecisionError": {
+              "source": "Failed to submit decision. Please check your connection and try again."
+            }
+          },
+          "outcomes": {
+            "success": "notifyDecisionFail"
+          }
+        },
+        "notifyDecisionFail": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Decision submission failed.",
+            "type": "error"
+          }
+        }
+      }
+    },
+    "clearDecisionChain": {
+      "root": "clearDecision",
+      "actions": {
+        "clearDecision": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecision": {
+              "source": {
+                "decision": "",
+                "reason": "",
+                "existing_supplier_id": ""
+              }
+            },
+            "$page.variables.reviewDecisionError": {
+              "source": ""
+            }
+          }
+        }
+      }
+    },
+    "onDecisionChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setDecision",
+      "actions": {
+        "setDecision": {
+          "module": "vb/action/builtin/callModuleFunctionAction",
+          "parameters": {
+            "module": "[[ $functions ]]",
+            "functionName": "patchReviewDecision",
+            "params": [
+              "{{ $page.variables.reviewDecision }}",
+              "decision",
+              "{{ $chain.variables.value }}"
+            ]
+          },
+          "outcomes": {
+            "success": "assignDecision"
+          }
+        },
+        "assignDecision": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecision": {
+              "source": "{{ $chain.results.setDecision }}"
+            }
+          }
+        }
+      }
+    },
+    "onDecisionReasonInputChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setReason",
+      "actions": {
+        "setReason": {
+          "module": "vb/action/builtin/callModuleFunctionAction",
+          "parameters": {
+            "module": "[[ $functions ]]",
+            "functionName": "patchReviewDecision",
+            "params": [
+              "{{ $page.variables.reviewDecision }}",
+              "reason",
+              "{{ $chain.variables.value }}"
+            ]
+          },
+          "outcomes": {
+            "success": "assignReason"
+          }
+        },
+        "assignReason": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecision": {
+              "source": "{{ $chain.results.setReason }}"
+            }
+          }
+        }
+      }
+    },
+    "onExistingSupplierIdInputChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setExistingId",
+      "actions": {
+        "setExistingId": {
+          "module": "vb/action/builtin/callModuleFunctionAction",
+          "parameters": {
+            "module": "[[ $functions ]]",
+            "functionName": "patchReviewDecision",
+            "params": [
+              "{{ $page.variables.reviewDecision }}",
+              "existing_supplier_id",
+              "{{ $chain.variables.value }}"
+            ]
+          },
+          "outcomes": {
+            "success": "assignExistingId"
+          }
+        },
+        "assignExistingId": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.reviewDecision": {
+              "source": "{{ $chain.results.setExistingId }}"
+            }
+          }
+        }
+      }
+    },
+    "onJustAdjPointsChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setPoints",
+      "actions": {
+        "setPoints": {
+          "module": "vb/action/builtin/callModuleFunctionAction",
+          "parameters": {
+            "module": "[[ $functions ]]",
+            "functionName": "patchJustAdj",
+            "params": [
+              "{{ $page.variables.justAdj }}",
+              "points",
+              "{{ Number($chain.variables.value) }}"
+            ]
+          },
+          "outcomes": {
+            "success": "assignPoints"
+          }
+        },
+        "assignPoints": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.justAdj": {
+              "source": "{{ $chain.results.setPoints }}"
+            }
+          }
+        }
+      }
+    },
+    "onJustAdjReasonInputChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setReason",
+      "actions": {
+        "setReason": {
+          "module": "vb/action/builtin/callModuleFunctionAction",
+          "parameters": {
+            "module": "[[ $functions ]]",
+            "functionName": "patchJustAdj",
+            "params": [
+              "{{ $page.variables.justAdj }}",
+              "reason",
+              "{{ $chain.variables.value }}"
+            ]
+          },
+          "outcomes": {
+            "success": "assignReason"
+          }
+        },
+        "assignReason": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.justAdj": {
+              "source": "{{ $chain.results.setReason }}"
+            }
+          }
+        }
+      }
+    },
+    "quickFilterPendingChain": {
+      "root": "setFilters",
+      "actions": {
+        "setFilters": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterStatus": {
+              "source": "SUBMITTED"
+            },
+            "$page.variables.filterRiskLevel": {
+              "source": "ALL"
+            },
+            "$page.variables.filterDuplicateLevel": {
+              "source": "ALL"
+            },
+            "$page.variables.filterBusinessUnit": {
+              "source": "ALL"
+            }
+          }
+        }
+      }
+    },
+    "quickFilterHighRiskChain": {
+      "root": "setFilters",
+      "actions": {
+        "setFilters": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterStatus": {
+              "source": "ALL"
+            },
+            "$page.variables.filterRiskLevel": {
+              "source": "HIGH"
+            },
+            "$page.variables.filterDuplicateLevel": {
+              "source": "ALL"
+            },
+            "$page.variables.filterBusinessUnit": {
+              "source": "ALL"
+            }
+          }
+        }
+      }
+    },
+    "quickFilterDuplicateChain": {
+      "root": "setFilters",
+      "actions": {
+        "setFilters": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterStatus": {
+              "source": "ALL"
+            },
+            "$page.variables.filterRiskLevel": {
+              "source": "ALL"
+            },
+            "$page.variables.filterDuplicateLevel": {
+              "source": "HIGH"
+            },
+            "$page.variables.filterBusinessUnit": {
+              "source": "ALL"
+            }
+          }
+        }
+      }
+    },
+    "quickFilterAllChain": {
+      "root": "setFilters",
+      "actions": {
+        "setFilters": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterStatus": {
+              "source": "ALL"
+            },
+            "$page.variables.filterRiskLevel": {
+              "source": "ALL"
+            },
+            "$page.variables.filterDuplicateLevel": {
+              "source": "ALL"
+            },
+            "$page.variables.filterBusinessUnit": {
+              "source": "ALL"
+            }
+          }
+        }
+      }
+    },
+    "onFilterBusinessUnitChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterBusinessUnit": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onFilterStatusChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterStatus": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onFilterRiskLevelChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterRiskLevel": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onFilterDuplicateLevelChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterDuplicateLevel": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "openIntegrationLogsChain": {
+      "root": "setTab",
+      "actions": {
+        "setTab": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "integration-logs"
+            }
+          },
+          "outcomes": {
+            "success": "loadLogs"
+          }
+        },
+        "loadLogs": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadIntegrationLogsChain"
+          }
+        }
+      }
+    },
+    "loadIntegrationLogsChain": {
+      "root": "setLoading",
+      "actions": {
+        "setLoading": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.integrationLogsLoading": {
+              "source": "{{ true }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchLogs"
+          }
+        },
+        "fetchLogs": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getIntegrationLogs",
+            "uriParams": {
+              "limit": 200,
+              "offset": 0,
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignLogs",
+            "failure": "handleLogsFailure"
+          }
+        },
+        "assignLogs": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.integrationLogs": {
+              "source": "{{ $chain.results.fetchLogs.body.items }}"
+            },
+            "$page.variables.integrationLogsError": {
+              "source": ""
+            },
+            "$page.variables.integrationLogsLoading": {
+              "source": "{{ false }}"
+            }
+          }
+        },
+        "handleLogsFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.integrationLogsError": {
+              "source": "Unable to load integration logs from ORDS. Check connectivity."
+            },
+            "$page.variables.integrationLogsLoading": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "notifyLogsFailure"
+          }
+        },
+        "notifyLogsFailure": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Failed to load OIC/Fusion logs.",
+            "type": "error"
+          }
+        }
+      }
+    },
+    "onFilterLogStatusChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterLogStatus": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onFilterLogTypeChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterLogType": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "retryRequestChain": {
+      "variables": {
+        "requestId": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setBusyId",
+      "actions": {
+        "setBusyId": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.retryBusyId": {
+              "source": "{{ $chain.variables.requestId }}"
+            }
+          },
+          "outcomes": {
+            "success": "callRetry"
+          }
+        },
+        "callRetry": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/retryRequest",
+            "uriParams": {
+              "request_id": "{{ $chain.variables.requestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "retrySuccess",
+            "failure": "retryFailure"
+          }
+        },
+        "retrySuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.retryBusyId": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "notifyRetrySuccess"
+          }
+        },
+        "notifyRetrySuccess": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Retry job queued successfully.",
+            "type": "confirmation"
+          },
+          "outcomes": {
+            "success": "reloadLogsAfterRetry"
+          }
+        },
+        "reloadLogsAfterRetry": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadIntegrationLogsChain"
+          }
+        },
+        "retryFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.retryBusyId": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "notifyRetryFailure"
+          }
+        },
+        "notifyRetryFailure": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Retry failed. Request may not be eligible or ORDS unreachable.",
+            "type": "error"
+          }
+        }
+      }
+    },
+    "onDocumentTypeChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignValue",
+      "actions": {
+        "assignValue": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.selectedDocumentType": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onDocumentFileSelectedChain": {
+      "variables": {
+        "event": {
+          "type": "any",
+          "input": "fromCaller"
+        }
+      },
+      "root": "readFileData",
+      "actions": {
+        "readFileData": {
+          "module": "vb/action/builtin/callModuleFunctionAction",
+          "parameters": {
+            "module": "[[ $functions ]]",
+            "functionName": "readFileDetails",
+            "params": [
+              "{{ $chain.variables.event }}"
+            ]
+          },
+          "outcomes": {
+            "success": "assignDocDetails"
+          }
+        },
+        "assignDocDetails": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.selectedDocumentFileName": {
+              "source": "{{ $chain.results.readFileData.fileName }}"
+            },
+            "$page.variables.selectedDocumentBase64": {
+              "source": "{{ $chain.results.readFileData.base64 }}"
+            },
+            "$page.variables.selectedDocumentMimeType": {
+              "source": "{{ $chain.results.readFileData.mimeType || 'application/pdf' }}"
+            },
+            "$page.variables.selectedDocumentFileSize": {
+              "source": "{{ $chain.results.readFileData.fileSize || 0 }}"
+            }
+          }
+        }
+      }
+    },
+    "uploadDocumentChain": {
+      "root": "setBusyTrue",
+      "actions": {
+        "setBusyTrue": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.documentUploadBusy": {
+              "source": "{{ true }}"
+            }
+          },
+          "outcomes": {
+            "success": "checkDraft"
+          }
+        },
+        "checkDraft": {
+          "module": "vb/action/builtin/ifAction",
+          "parameters": {
+            "condition": "{{ !!$page.variables.currentRequestId }}"
+          },
+          "outcomes": {
+            "true": "postDoc",
+            "false": "createDraftFirst"
+          }
+        },
+        "createDraftFirst": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/createRequest",
+            "body": "{{ $page.variables.newRequest }}",
+            "uriParams": {
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignNewReqId",
+            "failure": "notifyUploadFailure"
+          }
+        },
+        "assignNewReqId": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentRequestId": {
+              "source": "{{ $chain.results.createDraftFirst.body.request_id }}"
+            },
+            "$page.variables.currentRequestStatus": {
+              "source": "DRAFT"
+            }
+          },
+          "outcomes": {
+            "success": "postDoc"
+          }
+        },
+        "postDoc": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/uploadDocument",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": {
+              "document_type": "{{ $page.variables.selectedDocumentType || 'OTHER' }}",
+              "file_name": "{{ $page.variables.selectedDocumentFileName || 'document.pdf' }}",
+              "mime_type": "{{ $page.variables.selectedDocumentMimeType || 'application/pdf' }}",
+              "document_content_base64": "{{ $page.variables.selectedDocumentBase64 || '' }}"
+            }
+          },
+          "outcomes": {
+            "success": "reloadReqDocs",
+            "failure": "notifyUploadFailure"
+          }
+        },
+        "reloadReqDocs": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadRequesterDocumentsChain",
+            "params": {
+              "requestId": "{{ $page.variables.currentRequestId }}"
+            }
+          },
+          "outcomes": {
+            "success": "clearInput"
+          }
+        },
+        "clearInput": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.selectedDocumentFileName": {
+              "source": ""
+            },
+            "$page.variables.selectedDocumentBase64": {
+              "source": ""
+            },
+            "$page.variables.selectedDocumentFileSize": {
+              "source": 0
+            },
+            "$page.variables.selectedDocumentFile": {
+              "source": null
+            },
+            "$page.variables.documentUploadBusy": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "notifyUploadSuccess"
+          }
+        },
+        "notifyUploadSuccess": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Supporting document attached successfully.",
+            "type": "info"
+          }
+        },
+        "notifyUploadFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.documentUploadBusy": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "fireFailToast"
+          }
+        },
+        "fireFailToast": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Document upload failed. Please try again.",
+            "type": "error"
+          }
+        }
+      }
+    },
+    "saveDraftChain": {
+      "root": "checkEditable",
+      "actions": {
+        "checkEditable": {
+          "module": "vb/action/builtin/ifAction",
+          "parameters": {
+            "condition": "{{ !!$page.variables.currentRequestId && ['DRAFT','VALIDATION_FAILED','CORRECTION_REQUIRED','UNDER_REVIEW'].indexOf($page.variables.currentRequestStatus) !== -1 }}"
+          },
+          "outcomes": {
+            "true": "callUpdateREST",
+            "false": "callCreateREST"
+          }
+        },
+        "callUpdateREST": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/updateRequest",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": "{{ $page.variables.newRequest }}"
+          },
+          "outcomes": {
+            "success": "showSuccess",
+            "failure": "showSaveDraftFailure"
+          }
+        },
+        "callCreateREST": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/createRequest",
+            "body": "{{ $page.variables.newRequest }}",
+            "uriParams": {
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignDraftRequestId",
+            "failure": "showSaveDraftFailure"
+          }
+        },
+        "assignDraftRequestId": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentRequestId": {
+              "source": "{{ $chain.results.callCreateREST.body.request_id }}"
+            },
+            "$page.variables.currentRequestStatus": {
+              "source": "DRAFT"
+            }
+          },
+          "outcomes": {
+            "success": "showSuccess"
+          }
+        },
+        "showSuccess": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Draft Saved Successfully",
+            "type": "info"
+          },
+          "outcomes": {
+            "success": "reloadDashboardAfterSave"
+          }
+        },
+        "showSaveDraftFailure": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Failed to save draft. Please try again.",
+            "type": "error"
+          }
+        },
+        "reloadDashboardAfterSave": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadDashboardDataChain"
+          }
+        }
+      }
+    },
+    "submitRequestChain": {
+      "root": "checkEditable",
+      "actions": {
+        "checkEditable": {
+          "module": "vb/action/builtin/ifAction",
+          "parameters": {
+            "condition": "{{ !!$page.variables.currentRequestId && ['DRAFT','VALIDATION_FAILED','CORRECTION_REQUIRED','UNDER_REVIEW'].indexOf($page.variables.currentRequestStatus) !== -1 }}"
+          },
+          "outcomes": {
+            "true": "updateExisting",
+            "false": "createDraft"
+          }
+        },
+        "updateExisting": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/updateRequest",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": "{{ $page.variables.newRequest }}"
+          },
+          "outcomes": {
+            "success": "submitExisting",
+            "failure": "submitFailure"
+          }
+        },
+        "submitExisting": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/submitRequest",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "navToDashboard",
+            "failure": "submitFailure"
+          }
+        },
+        "createDraft": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/createRequest",
+            "body": "{{ $page.variables.newRequest }}",
+            "uriParams": {
+              "actor_subject_id": "REQ_AMINA_SUB",
+              "actor_roles": "REQUESTER"
+            }
+          },
+          "outcomes": {
+            "success": "submitForValidation",
+            "failure": "submitFailure"
+          }
+        },
+        "submitForValidation": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/submitRequest",
+            "uriParams": {
+              "request_id": "{{ $chain.results.createDraft.body.request_id }}",
+              "actor_subject_id": "REQ_AMINA_SUB",
+              "actor_roles": "REQUESTER"
+            }
+          },
+          "outcomes": {
+            "success": "navToDashboard",
+            "failure": "submitFailure"
+          }
+        },
+        "navToDashboard": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "dashboard"
+            },
+            "$page.variables.currentRequestId": {
+              "source": ""
+            },
+            "$page.variables.currentRequestStatus": {
+              "source": ""
+            },
+            "$page.variables.currentRequestReadOnly": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "reloadDashboardAfterSubmit"
+          }
+        },
+        "submitFailure": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Submission failed. Please check your data and try again.",
+            "type": "error"
+          }
+        },
+        "reloadDashboardAfterSubmit": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadDashboardDataChain"
+          }
+        }
+      }
+    },
+    "clearRequestChain": {
+      "root": "clearIds",
+      "actions": {
+        "clearIds": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentRequestId": {
+              "source": ""
+            },
+            "$page.variables.currentRequestStatus": {
+              "source": ""
+            },
+            "$page.variables.currentRequestReadOnly": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.requesterDocuments": {
+              "source": []
+            },
+            "$page.variables.selectedDocumentFileName": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "goToNewTab"
+          }
+        },
+        "goToNewTab": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "new-request"
+            }
+          }
+        }
+      }
+    },
+    "viewRequestChain": {
+      "variables": {
+        "requestId": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignId",
+      "actions": {
+        "assignId": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentRequestId": {
+              "source": "{{ $chain.variables.requestId }}"
+            }
+          },
+          "outcomes": {
+            "success": "fetchRequestData"
+          }
+        },
+        "fetchRequestData": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRequest",
+            "uriParams": {
+              "request_id": "{{ $chain.variables.requestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "populateForm"
+          }
+        },
+        "populateForm": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.newRequest": {
+              "source": "{{ $chain.results.fetchRequestData.body }}"
+            },
+            "$page.variables.currentRequestStatus": {
+              "source": "{{ $chain.results.fetchRequestData.body.status || '' }}"
+            },
+            "$page.variables.currentRequestReadOnly": {
+              "source": "{{ ['REJECTED','SUBMITTED','DUPLICATE','CREATED_IN_FUSION','INTEGRATION_FAILED'].indexOf($chain.results.fetchRequestData.body.status || '') !== -1 }}"
+            }
+          },
+          "outcomes": {
+            "success": "goToTab"
+          }
+        },
+        "goToTab": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "new-request"
+            }
+          },
+          "outcomes": {
+            "success": "loadDocsForView"
+          }
+        },
+        "loadDocsForView": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadRequesterDocumentsChain",
+            "params": {
+              "requestId": "{{ $chain.variables.requestId }}"
+            }
+          }
+        }
+      }
+    },
+    "openActionHistoryChain": {
+      "root": "setTab",
+      "actions": {
+        "setTab": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.currentTab": {
+              "source": "action-history"
+            }
+          },
+          "outcomes": {
+            "success": "loadHistory"
+          }
+        },
+        "loadHistory": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadActionHistoryChain"
+          }
+        }
+      }
+    },
+    "loadActionHistoryChain": {
+      "root": "setLoading",
+      "actions": {
+        "setLoading": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.actionHistoryLoading": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.actionHistoryError": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "fetchHistory"
+          }
+        },
+        "fetchHistory": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getActionHistory",
+            "uriParams": {
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}",
+              "limit": 500,
+              "offset": 0
+            }
+          },
+          "outcomes": {
+            "success": "assignHistory",
+            "failure": "handleHistoryFailure"
+          }
+        },
+        "assignHistory": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.actionHistory": {
+              "source": "{{ $chain.results.fetchHistory.body.items }}"
+            },
+            "$page.variables.actionHistoryLoading": {
+              "source": "{{ false }}"
+            }
+          }
+        },
+        "handleHistoryFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.actionHistoryError": {
+              "source": "Unable to load action history from ORDS."
+            },
+            "$page.variables.actionHistoryLoading": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "notifyHistoryFailure"
+          }
+        },
+        "notifyHistoryFailure": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Failed to load action history.",
+            "type": "error"
+          }
+        }
+      }
+    },
+    "onFilterHistoryActionTypeChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterHistoryActionType": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onFilterHistoryRequestIdInputChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setFilter",
+      "actions": {
+        "setFilter": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.filterHistoryRequestId": {
+              "source": "{{ $chain.variables.value }}"
+            }
+          }
+        }
+      }
+    },
+    "onRuleWeightChangeChain": {
+      "root": "updateTotal",
+      "actions": {
+        "updateTotal": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.totalBaseWeight": {
+              "source": "{{ $functions.computeBaseRulesTotal($page.variables.riskRules) }}"
+            }
+          }
+        }
+      }
+    },
+    "saveAllRulesChain": {
+      "root": "setBusy",
+      "actions": {
+        "setBusy": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.ruleUpdateBusy": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.ruleUpdateMessage": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "loopRules"
+          }
+        },
+        "loopRules": {
+          "module": "vb/action/builtin/forEachAction",
+          "parameters": {
+            "items": "{{ $page.variables.riskRules }}",
+            "actionId": "callPUT"
+          },
+          "outcomes": {
+            "success": "saveSuccess"
+          }
+        },
+        "callPUT": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/updateRiskRule",
+            "uriParams": {
+              "rule_code": "{{ $current.data.rule_code }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": {
+              "weight": "{{ $current.data.weight }}",
+              "active": "{{ $current.data.active }}"
+            }
+          }
+        },
+        "saveSuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.ruleUpdateBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.ruleUpdateMessage": {
+              "source": "All rules updated successfully."
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadAdminConfigChain"
+          }
+        }
+      }
+    },
+    "onBandScoreChangeChain": {
+      "root": "updateValid",
+      "actions": {
+        "updateValid": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.totalBandsValid": {
+              "source": "{{ $functions.computeRiskBandsValid($page.variables.riskBands) }}"
+            }
+          }
+        }
+      }
+    },
+    "saveAllBandsChain": {
+      "root": "setBusy",
+      "actions": {
+        "setBusy": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.bandUpdateBusy": {
+              "source": "{{ true }}"
+            },
+            "$page.variables.bandUpdateMessage": {
+              "source": ""
+            }
+          },
+          "outcomes": {
+            "success": "loopBands"
+          }
+        },
+        "loopBands": {
+          "module": "vb/action/builtin/forEachAction",
+          "parameters": {
+            "items": "{{ $page.variables.riskBands }}",
+            "actionId": "callPUT"
+          },
+          "outcomes": {
+            "success": "saveSuccess"
+          }
+        },
+        "callPUT": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/updateRiskScoreBand",
+            "uriParams": {
+              "risk_level": "{{ $current.data.risk_level }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            },
+            "body": {
+              "min_score": "{{ $current.data.min_score }}",
+              "max_score": "{{ $current.data.max_score }}"
+            }
+          }
+        },
+        "saveSuccess": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.bandUpdateBusy": {
+              "source": "{{ false }}"
+            },
+            "$page.variables.bandUpdateMessage": {
+              "source": "Risk bands updated successfully."
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadAdminConfigChain"
+          }
+        }
+      }
+    },
+    "loadRequesterDocumentsChain": {
+      "variables": {
+        "requestId": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "checkReqId",
+      "actions": {
+        "checkReqId": {
+          "module": "vb/action/builtin/ifAction",
+          "parameters": {
+            "condition": "{{ !!($chain.variables.requestId || $page.variables.currentRequestId) }}"
+          },
+          "outcomes": {
+            "true": "fetchReqDocs",
+            "false": "clearReqDocs"
+          }
+        },
+        "fetchReqDocs": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/getRequestDocuments",
+            "uriParams": {
+              "request_id": "{{ $chain.variables.requestId || $page.variables.currentRequestId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "assignReqDocs",
+            "failure": "clearReqDocs"
+          }
+        },
+        "assignReqDocs": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.requesterDocuments": {
+              "source": "{{ $chain.results.fetchReqDocs.body.items || [] }}"
+            }
+          }
+        },
+        "clearReqDocs": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.requesterDocuments": {
+              "source": []
+            }
+          }
+        }
+      }
+    },
+    "deleteDocumentChain": {
+      "variables": {
+        "documentId": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "setDeleteBusy",
+      "actions": {
+        "setDeleteBusy": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.documentDeleteBusy": {
+              "source": "{{ true }}"
+            }
+          },
+          "outcomes": {
+            "success": "callDeleteREST"
+          }
+        },
+        "callDeleteREST": {
+          "module": "vb/action/builtin/restAction",
+          "parameters": {
+            "endpoint": "ORDS-Specification/deleteRequestDocument",
+            "uriParams": {
+              "request_id": "{{ $page.variables.currentRequestId }}",
+              "document_id": "{{ $chain.variables.documentId }}",
+              "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
+              "actor_roles": "{{ $page.variables.currentRole }}"
+            }
+          },
+          "outcomes": {
+            "success": "reloadDocsAfterDelete",
+            "failure": "notifyDeleteFailure"
+          }
+        },
+        "reloadDocsAfterDelete": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadRequesterDocumentsChain",
+            "params": {
+              "requestId": "{{ $page.variables.currentRequestId }}"
+            }
+          },
+          "outcomes": {
+            "success": "setDeleteBusyFalse"
+          }
+        },
+        "setDeleteBusyFalse": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.documentDeleteBusy": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "notifyDeleteSuccess"
+          }
+        },
+        "notifyDeleteSuccess": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Document removed.",
+            "type": "info"
+          }
+        },
+        "notifyDeleteFailure": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.documentDeleteBusy": {
+              "source": "{{ false }}"
+            }
+          },
+          "outcomes": {
+            "success": "fireDeleteFailToast"
+          }
+        },
+        "fireDeleteFailToast": {
+          "module": "vb/action/builtin/fireNotificationEventAction",
+          "parameters": {
+            "summary": "Failed to remove document. Please try again.",
+            "type": "error"
+          }
+        }
+      }
+    }
+  },
+  "imports": {
+    "components": {
+      "oj-button": {
+        "path": "ojs/ojbutton"
+      },
+      "oj-input-number": {
+        "path": "ojs/ojinputnumber"
+      },
+      "oj-input-text": {
+        "path": "ojs/ojinputtext"
+      },
+      "oj-table": {
+        "path": "ojs/ojtable"
+      },
+      "oj-text-area": {
+        "path": "ojs/ojinputtext"
+      }
+    },
+    "css": [
+      "/resources/css/main.css"
+    ]
+  }
+}

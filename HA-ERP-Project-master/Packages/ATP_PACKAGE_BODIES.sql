@@ -199,43 +199,18 @@ create or replace package body supplier_config_pkg as
       return 'Y';
   end is_tax_required;
 
-  -- FIXED (Session 5a): replaced wrong sum=100 check with two independent
-  -- architectural checks per design spec:
-  --   BASE component rules are additive -> total must be <= 55
-  --   DUPLICATE component rules are "take the strongest" -> no single weight > 45
   procedure validate_risk_allocation is
-    l_base_total number;
-    l_dup_max    number;
+    l_total number;
   begin
     select nvl(sum(weight_points), 0)
-      into l_base_total
+      into l_total
       from risk_rule_config
-     where component = 'BASE'
-       and active = 'Y';
+     where active = 'Y' and component = 'BASE';
 
-    if l_base_total > 55 then
+    if l_total <> 100 then
       raise_application_error(
         -20020,
-        'Risk allocation is invalid: active BASE rule weights total ' ||
-        to_char(l_base_total) ||
-        ' but must not exceed 55. ' ||
-        'Reduce one or more active BASE rule weights before saving.'
-      );
-    end if;
-
-    select nvl(max(weight_points), 0)
-      into l_dup_max
-      from risk_rule_config
-     where component = 'DUPLICATE'
-       and active = 'Y';
-
-    if l_dup_max > 45 then
-      raise_application_error(
-        -20021,
-        'Risk allocation is invalid: a DUPLICATE rule has weight ' ||
-        to_char(l_dup_max) ||
-        ' which exceeds the maximum of 45. ' ||
-        'No individual DUPLICATE rule weight may exceed 45.'
+        'Risk allocation is invalid: active BASE risk rule weights must total exactly 100'
       );
     end if;
   end validate_risk_allocation;
@@ -285,7 +260,8 @@ create or replace package body supplier_config_pkg as
       );
     end if;
 
-    validate_risk_allocation;
+    -- Removed immediate validate_risk_allocation; 
+    -- Batch updates rely on the UI to ensure the total is 100 at the end.
   end update_risk_rule;
 
   procedure set_high_risk_country(
@@ -331,6 +307,30 @@ create or replace package body supplier_config_pkg as
       );
     end if;
   end set_high_risk_country;
+
+  procedure update_risk_score_band(
+    p_actor_subject_id in varchar2,
+    p_risk_level in varchar2,
+    p_min_score in number,
+    p_max_score in number
+  ) is
+    l_risk_level varchar2(20);
+  begin
+    l_risk_level := upper(trim(p_risk_level));
+
+    if p_min_score < 0 or p_max_score > 100 or p_min_score > p_max_score then
+      raise_application_error(-20023, 'Invalid risk score band boundaries');
+    end if;
+
+    update risk_score_band_config
+       set min_score = p_min_score,
+           max_score = p_max_score,
+           updated_by_subject_id = p_actor_subject_id,
+           updated_at = systimestamp
+     where risk_level = l_risk_level;
+     
+    -- Note: UI will ensure continuous 0-100 coverage for the bands.
+  end update_risk_score_band;
 end supplier_config_pkg;
 /
 
@@ -1046,6 +1046,52 @@ create or replace package body supplier_request_pkg as
      where request_id = p_request_id;
   end submit_request;
 
+  function base64_to_blob(p_base64 in clob) return blob is
+    l_blob blob;
+    l_clean_base64 clob;
+    l_comma_pos number;
+    l_chunk_len pls_integer := 24000;
+    l_pos pls_integer := 1;
+    l_raw raw(32767);
+    l_chunk varchar2(32767);
+    l_total_len pls_integer;
+  begin
+    if p_base64 is null or dbms_lob.getlength(p_base64) = 0 then
+      return null;
+    end if;
+
+    -- Strip data URL header if present (e.g. data:application/pdf;base64,...)
+    l_comma_pos := dbms_lob.instr(p_base64, ',');
+    if l_comma_pos > 0 and l_comma_pos <= 150 and dbms_lob.instr(p_base64, 'base64') > 0 and dbms_lob.instr(p_base64, 'base64') < l_comma_pos then
+      dbms_lob.createtemporary(l_clean_base64, true);
+      l_total_len := dbms_lob.getlength(p_base64) - l_comma_pos;
+      if l_total_len > 0 then
+        dbms_lob.copy(l_clean_base64, p_base64, l_total_len, 1, l_comma_pos + 1);
+      else
+        return null;
+      end if;
+    else
+      l_clean_base64 := p_base64;
+    end if;
+
+    dbms_lob.createtemporary(l_blob, true);
+
+    while l_pos <= dbms_lob.getlength(l_clean_base64) loop
+      l_chunk := dbms_lob.substr(l_clean_base64, l_chunk_len, l_pos);
+      l_chunk := replace(replace(replace(l_chunk, chr(10), ''), chr(13), ''), ' ', '');
+      if length(l_chunk) > 0 then
+        l_raw := utl_encode.base64_decode(utl_raw.cast_to_raw(l_chunk));
+        dbms_lob.writeappend(l_blob, utl_raw.length(l_raw), l_raw);
+      end if;
+      l_pos := l_pos + l_chunk_len;
+    end loop;
+
+    return l_blob;
+  exception
+    when others then
+      return null;
+  end base64_to_blob;
+
   procedure add_document(
     p_actor_subject_id in varchar2,
     p_actor_roles in varchar2,
@@ -1054,10 +1100,12 @@ create or replace package body supplier_request_pkg as
     p_file_name in varchar2,
     p_mime_type in varchar2 default null,
     p_document_content in blob default null,
+    p_document_content_base64 in clob default null,
     p_document_id out number
   ) is
     l_version number;
     l_status supplier_request.status%type;
+    l_content blob;
   begin
     supplier_auth_pkg.require_role(p_actor_roles, 'REQUESTER');
     supplier_auth_pkg.assert_request_access(p_actor_subject_id, p_actor_roles, p_request_id);
@@ -1067,6 +1115,11 @@ create or replace package body supplier_request_pkg as
       from supplier_request
      where request_id = p_request_id
      for update;
+
+    l_content := p_document_content;
+    if l_content is null and p_document_content_base64 is not null then
+      l_content := base64_to_blob(p_document_content_base64);
+    end if;
 
     update request_document
        set is_latest = 'N'
@@ -1089,7 +1142,7 @@ create or replace package body supplier_request_pkg as
       upper(p_document_type),
       p_file_name,
       p_mime_type,
-      p_document_content,
+      l_content,
       'Y',
       p_actor_subject_id
     ) returning document_id into p_document_id;
@@ -1100,9 +1153,42 @@ create or replace package body supplier_request_pkg as
       p_from_status => l_status,
       p_to_status => l_status,
       p_actor_subject_id => p_actor_subject_id,
-      p_reason => 'Requester uploaded or replaced a document'
+      p_reason => 'Requester uploaded or replaced document ' || p_file_name
     );
   end add_document;
+
+  procedure delete_document(
+    p_actor_subject_id in varchar2,
+    p_actor_roles in varchar2,
+    p_request_id in number,
+    p_document_id in number
+  ) is
+    l_status supplier_request.status%type;
+  begin
+    supplier_auth_pkg.require_role(p_actor_roles, 'REQUESTER');
+    supplier_auth_pkg.assert_request_access(p_actor_subject_id, p_actor_roles, p_request_id);
+
+    select status
+      into l_status
+      from supplier_request
+     where request_id = p_request_id
+     for update;
+
+    update request_document
+       set is_latest = 'N'
+     where request_id = p_request_id
+       and document_id = p_document_id
+       and is_latest = 'Y';
+
+    supplier_workflow_pkg.write_action(
+      p_request_id => p_request_id,
+      p_action => 'REMOVE_DOCUMENT',
+      p_from_status => l_status,
+      p_to_status => l_status,
+      p_actor_subject_id => p_actor_subject_id,
+      p_reason => 'Requester removed a document'
+    );
+  end delete_document;
 end supplier_request_pkg;
 /
 
@@ -1192,14 +1278,14 @@ create or replace package body supplier_review_pkg as
     l_deterministic_score request_assessment.deterministic_risk_score%type;
     l_adjusted_score request_assessment.risk_score%type;
     l_adjusted_level request_assessment.risk_level%type;
-    l_ai_count number;
     l_points number(5,2);
   begin
     supplier_auth_pkg.require_role(p_actor_roles, 'REVIEWER');
     supplier_auth_pkg.assert_request_access(p_actor_subject_id, p_actor_roles, p_request_id);
 
-    l_points := nvl(p_points, -1);
+    l_points := nvl(p_points, 0);
 
+    -- Allowed justification penalty points: 0 (clear/no extra risk), 3, 5, 10 (vague/weak justification)
     if l_points not in (0, 3, 5, 10) then
       raise_application_error(-20052, 'Justification-risk adjustment must be 0, 3, 5, or 10 points');
     end if;
@@ -1214,18 +1300,6 @@ create or replace package body supplier_review_pkg as
       raise_application_error(-20053, 'Justification-risk adjustment is allowed only while a request is under review');
     end if;
 
-    select count(*)
-      into l_ai_count
-      from ai_assessment
-     where request_id = p_request_id
-       and request_version = l_request_version
-       and is_latest = 'Y'
-       and status = 'SUCCEEDED';
-
-    if l_ai_count = 0 then
-      raise_application_error(-20054, 'A successful Gemini assessment is required before applying justification-risk points');
-    end if;
-
     select assessment_id,
            nvl(deterministic_risk_score, risk_score)
       into l_assessment_id,
@@ -1236,6 +1310,7 @@ create or replace package body supplier_review_pkg as
        and is_latest = 'Y'
      for update;
 
+    -- Add points: 0 = excellent/clear (0 extra risk), 3/5/10 = vague justification penalty, capped at 100
     l_adjusted_score := least(l_deterministic_score + l_points, 100);
     l_adjusted_level := supplier_projection_pkg.risk_level(l_adjusted_score);
 

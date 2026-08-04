@@ -1,0 +1,1504 @@
+<div id="supplier-portal-vbcs">
+  <!-- TOPBAR WITH DYNAMIC ROLE SWITCHING -->
+  <div class="sp-topbar">
+    <div class="sp-brand">
+      <div class="sp-logo">OP</div>
+      <div>
+        <div class="sp-title">Oracle PartnerConnect</div>
+        <div class="sp-subtitle">Supplier Onboarding, Duplicate Detection &amp; Risk Scoring Portal</div>
+      </div>
+    </div>
+    <div class="sp-roles">
+      <button type="button"
+              class="sp-role"
+              style="[[ $variables.currentRole === 'REQUESTER' ? 'background:#635bff; color:#fff;' : '' ]]"
+              on-click="[[ $listeners.onSelectRequester ]]">Requester</button>
+      <button type="button"
+              class="sp-role"
+              style="[[ $variables.currentRole === 'REVIEWER' ? 'background:#635bff; color:#fff;' : '' ]]"
+              on-click="[[ $listeners.onSelectReviewer ]]">Reviewer</button>
+      <button type="button"
+              class="sp-role"
+              style="[[ $variables.currentRole === 'ADMIN' ? 'background:#635bff; color:#fff;' : '' ]]"
+              on-click="[[ $listeners.onSelectAdmin ]]">Admin</button>
+    </div>
+  </div>
+
+  <!-- DYNAMIC MODE BANNER -->
+  <div class="sp-mode">
+    <div class="sp-role-copy">
+      <oj-bind-if test="[[ $variables.currentRole === 'REQUESTER' ]]">
+        <div class="sp-role-message" style="display:block;">
+          <strong>Requester View</strong> Submit supplier requests, upload evidence, correct requests, and track Fusion ERP creation status.
+        </div>
+      </oj-bind-if>
+      <oj-bind-if test="[[ $variables.currentRole === 'REVIEWER' ]]">
+        <div class="sp-role-message" style="display:block;">
+          <strong>Reviewer View</strong> Review all submitted requests — duplicates, risk scoring, payment compliance, AI advisory — then approve, reject, flag duplicate, or request correction.
+        </div>
+      </oj-bind-if>
+      <oj-bind-if test="[[ $variables.currentRole === 'ADMIN' ]]">
+        <div class="sp-role-message" style="display:block;">
+          <strong>Admin View</strong> Inspect OIC/Fusion logs, OIC instance IDs, payload references, errors, and retry eligible failed requests.
+        </div>
+      </oj-bind-if>
+    </div>
+    <div>Prototype scope: ORDS APIs, OIC orchestration, Fusion Supplier Master, Gemini advisory, mock fallback.</div>
+  </div>
+
+  <!-- MAIN SHELL LAYOUT -->
+  <div class="sp-shell">
+    <aside class="sp-sidebar">
+      <div class="sp-panel">
+        <p class="sp-side-title">Workspace</p>
+        <div class="sp-nav">
+          <button type="button" class="sp-tab"
+                  style="[[ $variables.currentTab === 'dashboard' ? 'background:#eef2ff; color:#3730a3;' : '' ]]"
+                  on-click="[[ $listeners.onSelectDashboard ]]">
+            Dashboard
+          </button>
+          <oj-bind-if test="[[ $variables.currentRole === 'REQUESTER' ]]">
+            <button type="button" class="sp-tab"
+                    style="[[ $variables.currentTab === 'new-request' ? 'background:#eef2ff; color:#3730a3;' : '' ]]"
+                    on-click="[[ $listeners.onSelectNewRequest ]]">
+              New Request
+            </button>
+          </oj-bind-if>
+          <oj-bind-if test="[[ $variables.currentRole === 'REVIEWER' || $variables.currentRole === 'ADMIN' ]]">
+            <button type="button" class="sp-tab"
+                    style="[[ $variables.currentTab === 'erp-master' ? 'background:#eef2ff; color:#3730a3;' : '' ]]"
+                    on-click="[[ $listeners.onSelectErpMaster ]]">
+              ERP Supplier Master
+            </button>
+          </oj-bind-if>
+          <oj-bind-if test="[[ $variables.currentRole === 'ADMIN' ]]">
+            <button type="button" class="sp-tab"
+                    style="[[ $variables.currentTab === 'integration-logs' ? 'background:#eef2ff; color:#3730a3;' : '' ]]"
+                    on-click="[[ $listeners.onSelectIntegrationLogs ]]">
+              OIC &amp; Fusion Logs
+            </button>
+            <button type="button" class="sp-tab"
+                    style="[[ $variables.currentTab === 'action-history' ? 'background:#eef2ff; color:#3730a3;' : '' ]]"
+                    on-click="[[ $listeners.onSelectActionHistory ]]">
+              Action History
+            </button>
+            <button type="button" class="sp-tab"
+                    style="[[ $variables.currentTab === 'admin-config' ? 'background:#eef2ff; color:#3730a3;' : '' ]]"
+                    on-click="[[ $listeners.onSelectAdminConfig ]]">
+              ⚙️ Risk Config
+            </button>
+          </oj-bind-if>
+        </div>
+      </div>
+
+      <!-- REVIEWER: quick-filter panel for pending actions -->
+      <oj-bind-if test="[[ $variables.currentRole === 'REVIEWER' && $variables.currentTab === 'dashboard' ]]">
+        <div class="sp-panel">
+          <p class="sp-side-title">Quick Filters</p>
+          <div class="sp-nav">
+            <button type="button" class="sp-tab" on-click="[[ $listeners.onQuickFilterPending ]]">
+              ⏳ Needs Review
+            </button>
+            <button type="button" class="sp-tab" on-click="[[ $listeners.onQuickFilterHighRisk ]]">
+              🔴 High / Critical Risk
+            </button>
+            <button type="button" class="sp-tab" on-click="[[ $listeners.onQuickFilterDuplicate ]]">
+              🔁 Duplicate Flags
+            </button>
+            <button type="button" class="sp-tab" on-click="[[ $listeners.onQuickFilterAll ]]">
+              ☰ Show All
+            </button>
+          </div>
+        </div>
+      </oj-bind-if>
+    </aside>
+
+    <main class="sp-main">
+
+      <!-- ======================================================= -->
+      <!-- VIEW: DASHBOARD TABLE                                     -->
+      <!-- ======================================================= -->
+      <oj-bind-if test="[[ $variables.currentTab === 'dashboard' ]]">
+        <section id="sp-view-dashboard" class="sp-section" style="display:block;">
+          <div class="sp-section-head">
+            <div>
+              <h2>Supplier Onboarding Dashboard</h2>
+              <div class="sp-muted">
+                <oj-bind-if test="[[ $variables.currentRole === 'REVIEWER' ]]">All submitted requests — full queue visible to reviewers.</oj-bind-if>
+                <oj-bind-if test="[[ $variables.currentRole !== 'REVIEWER' ]]">Queue view for staged suppliers, duplicate risk, AI advisory and Fusion ERP status.</oj-bind-if>
+              </div>
+            </div>
+            <div class="sp-actions">
+              <button type="button" class="sp-btn" on-click="[[ $listeners.onRefreshDashboard ]]">Refresh Queue</button>
+              <oj-bind-if test="[[ $variables.currentRole === 'REQUESTER' ]]">
+                <button type="button" class="sp-btn primary" on-click="[[ $listeners.onGoToNewRequest ]]">New Supplier Request</button>
+              </oj-bind-if>
+            </div>
+          </div>
+
+          <!-- LOADING / ERROR STATE -->
+          <oj-bind-if test="[[ $variables.dashboardLoading ]]">
+            <div class="sp-muted" style="padding:6px 16px;">Loading supplier requests from ORDS…</div>
+          </oj-bind-if>
+          <oj-bind-if test="[[ !$variables.dashboardLoading && $variables.dashboardLoadError ]]">
+            <div style="padding:6px 16px;"><span class="sp-pill high"><oj-bind-text value="[[ $variables.dashboardLoadError ]]"></oj-bind-text></span></div>
+          </oj-bind-if>
+
+          <!-- STATISTICS ROW -->
+          <div class="sp-stats">
+            <div class="sp-stat"><span class="num"><oj-bind-text value="[[ '' + $functions.computeDashboardStats($variables.allRequests).openRequests ]]"></oj-bind-text></span><span class="sp-muted">Open Requests</span></div>
+            <div class="sp-stat"><span class="num"><oj-bind-text value="[[ '' + $functions.computeDashboardStats($variables.allRequests).highRiskCount ]]"></oj-bind-text></span><span class="sp-muted">High/Critical Risk</span></div>
+            <div class="sp-stat"><span class="num"><oj-bind-text value="[[ '' + $functions.computeDashboardStats($variables.allRequests).createdInFusionCount ]]"></oj-bind-text></span><span class="sp-muted">Created In Fusion</span></div>
+            <div class="sp-stat"><span class="num"><oj-bind-text value="[[ '' + $functions.computeDashboardStats($variables.allRequests).correctionRequiredCount ]]"></oj-bind-text></span><span class="sp-muted">Correction Required</span></div>
+          </div>
+
+          <!-- FILTERS ROW -->
+          <div class="sp-filters">
+            <div>
+              <label class="field-label">Business Unit</label>
+              <select on-change="[[ $listeners.onFilterBusinessUnitChange ]]">
+                <oj-bind-for-each data="[[ $functions.buildBusinessUnitOptions($variables.allRequests) ]]">
+                  <template data-oj-as="item">
+                    <option :value="[[ item.data.value ]]" :selected="[[ item.data.value === $variables.filterBusinessUnit ]]">
+                      <oj-bind-text value="[[ item.data.label ]]"></oj-bind-text>
+                    </option>
+                  </template>
+                </oj-bind-for-each>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Status</label>
+              <select on-change="[[ $listeners.onFilterStatusChange ]]">
+                <option value="ALL" :selected="[[ $variables.filterStatus === 'ALL' ]]">All Statuses</option>
+                <option value="DRAFT" :selected="[[ $variables.filterStatus === 'DRAFT' ]]">Draft</option>
+                <option value="SUBMITTED" :selected="[[ $variables.filterStatus === 'SUBMITTED' ]]">Submitted</option>
+                <option value="VALIDATION_FAILED" :selected="[[ $variables.filterStatus === 'VALIDATION_FAILED' ]]">Validation Failed</option>
+                <option value="UNDER_REVIEW" :selected="[[ $variables.filterStatus === 'UNDER_REVIEW' ]]">Under Review</option>
+                <option value="CORRECTION_REQUIRED" :selected="[[ $variables.filterStatus === 'CORRECTION_REQUIRED' ]]">Correction Required</option>
+                <option value="APPROVED" :selected="[[ $variables.filterStatus === 'APPROVED' ]]">Approved</option>
+                <option value="REJECTED" :selected="[[ $variables.filterStatus === 'REJECTED' ]]">Rejected</option>
+                <option value="DUPLICATE" :selected="[[ $variables.filterStatus === 'DUPLICATE' ]]">Duplicate</option>
+                <option value="SUBMITTED_TO_FUSION" :selected="[[ $variables.filterStatus === 'SUBMITTED_TO_FUSION' ]]">Submitted To Fusion</option>
+                <option value="CREATED_IN_FUSION" :selected="[[ $variables.filterStatus === 'CREATED_IN_FUSION' ]]">Created In Fusion</option>
+                <option value="INTEGRATION_FAILED" :selected="[[ $variables.filterStatus === 'INTEGRATION_FAILED' ]]">Integration Failed</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Risk Level</label>
+              <select on-change="[[ $listeners.onFilterRiskLevelChange ]]">
+                <option value="ALL" :selected="[[ $variables.filterRiskLevel === 'ALL' ]]">All Risk Levels</option>
+                <option value="LOW" :selected="[[ $variables.filterRiskLevel === 'LOW' ]]">Low</option>
+                <option value="MEDIUM" :selected="[[ $variables.filterRiskLevel === 'MEDIUM' ]]">Medium</option>
+                <option value="HIGH" :selected="[[ $variables.filterRiskLevel === 'HIGH' ]]">High</option>
+                <option value="CRITICAL" :selected="[[ $variables.filterRiskLevel === 'CRITICAL' ]]">Critical</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Duplicate Level</label>
+              <select on-change="[[ $listeners.onFilterDuplicateLevelChange ]]">
+                <option value="ALL"      :selected="[[ $variables.filterDuplicateLevel === 'ALL' ]]">Any</option>
+                <option value="NONE"     :selected="[[ $variables.filterDuplicateLevel === 'NONE' ]]">None</option>
+                <option value="POSSIBLE" :selected="[[ $variables.filterDuplicateLevel === 'POSSIBLE' ]]">Possible</option>
+                <option value="STRONG"   :selected="[[ $variables.filterDuplicateLevel === 'STRONG' ]]">Strong</option>
+                <option value="EXACT"    :selected="[[ $variables.filterDuplicateLevel === 'EXACT' ]]">Exact Match</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- OJET TABLE -->
+          <div class="sp-table-wrap">
+            <oj-table id="dashboard-table"
+                      data="[[ $variables.filteredRequestsADP ]]"
+                      columns='[
+                        {"headerText": "Request / Supplier", "template": "supplierTemplate"},
+                        {"headerText": "Status", "template": "statusTemplate"},
+                        {"headerText": "Risk", "template": "riskTemplate"},
+                        {"headerText": "Duplicate", "template": "duplicateTemplate"},
+                        {"headerText": "Fusion Result", "field": "fusion_supplier_number"},
+                        {"headerText": "Actions", "template": "actionTemplate"}
+                      ]'
+                      style="width: 100%;">
+
+              <template slot="supplierTemplate" data-oj-as="cell">
+                <strong><oj-bind-text value="[[ (cell.row.request_number || 'Draft') + ' — ' + (cell.row.supplier_name || '') ]]"></oj-bind-text></strong><br>
+                <span class="sp-muted"><oj-bind-text value="[[ cell.row.business_unit ]]"></oj-bind-text></span>
+              </template>
+
+              <template slot="statusTemplate" data-oj-as="cell">
+                <span class="sp-pill neutral"><oj-bind-text value="[[ cell.row.status ]]"></oj-bind-text></span>
+              </template>
+
+              <template slot="riskTemplate" data-oj-as="cell">
+                <span :class="[[ $functions.getRiskBadgeClass(cell.row.risk_level) ]]"><oj-bind-text value="[[ cell.row.risk_level || 'Not assessed' ]]"></oj-bind-text></span>
+              </template>
+
+              <template slot="duplicateTemplate" data-oj-as="cell">
+                <span :class="[[ $functions.getDuplicateBadgeClass(cell.row.duplicate_level) ]]"><oj-bind-text value="[[ cell.row.duplicate_level || 'Not assessed' ]]"></oj-bind-text></span>
+              </template>
+
+              <template slot="actionTemplate" data-oj-as="cell">
+                <oj-bind-if test="[[ $variables.currentRole === 'REVIEWER' ]]">
+                  <button type="button" class="sp-btn primary" on-click="[[ $listeners.onReviewRequest ]]" :data-request-id="[[ cell.row.request_id ]]">Review</button>
+                </oj-bind-if>
+                <oj-bind-if test="[[ $variables.currentRole !== 'REVIEWER' ]]">
+                  <button type="button" class="sp-btn" on-click="[[ $listeners.onViewRequest ]]" :data-request-id="[[ cell.row.request_id ]]">View</button>
+                </oj-bind-if>
+              </template>
+
+            </oj-table>
+          </div>
+        </section>
+      </oj-bind-if>
+
+      <!-- ======================================================= -->
+      <!-- VIEW: NEW REQUEST FORM (Requester)                        -->
+      <!-- ======================================================= -->
+      <oj-bind-if test="[[ $variables.currentTab === 'new-request' && $variables.currentRole === 'REQUESTER' ]]">
+        <section id="sp-view-new-request" class="sp-section" style="display:block;">
+          <div class="sp-section-head">
+            <div>
+              <h2>New / Correction Request</h2>
+              <div class="sp-muted">Capture the supplier request fields that Visual Builder sends to ORDS.</div>
+            </div>
+            <div class="sp-actions">
+              <!-- Save/Submit only shown when not read-only -->
+              <oj-bind-if test="[[ !$variables.currentRequestReadOnly ]]">
+                <oj-button on-oj-action="[[ $listeners.onSaveDraft ]]">Save Draft</oj-button>
+                <oj-button chroming="callToAction" on-oj-action="[[ $listeners.onSubmitRequest ]]">Validate &amp; Submit</oj-button>
+              </oj-bind-if>
+            </div>
+          </div>
+
+          <!-- Read-only notice banner -->
+          <oj-bind-if test="[[ $variables.currentRequestReadOnly ]]">
+            <div style="margin:0 0 16px 0; padding:12px 16px; background:#fff3cd; border-left:4px solid #f59e0b; border-radius:6px; color:#92400e;">
+              🔒 <strong>Read-only view</strong> — This request (<oj-bind-text value="[[ $variables.currentRequestStatus ]]"></oj-bind-text>) cannot be edited. To create a new request, click <strong>New Supplier Request</strong>.
+            </div>
+          </oj-bind-if>
+
+          <div class="sp-grid-2">
+            <div class="sp-form-block">
+              <h3>Corporate Identity</h3>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Supplier Name *</label>
+                  <oj-input-text value="{{ $variables.newRequest.supplier_name }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">Supplier Type *</label>
+                  <oj-input-text value="{{ $variables.newRequest.supplier_type }}"></oj-input-text>
+                </div>
+              </div>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Country Code *</label>
+                  <oj-input-text value="{{ $variables.newRequest.country_code }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">Business Unit *</label>
+                  <oj-input-text value="{{ $variables.newRequest.business_unit }}"></oj-input-text>
+                </div>
+              </div>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Requester Name *</label>
+                  <oj-input-text value="{{ $variables.newRequest.requester_display_name }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">Tax Registration Number *</label>
+                  <oj-input-text value="{{ $variables.newRequest.tax_registration_number }}"></oj-input-text>
+                </div>
+              </div>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Expected Annual Spend *</label>
+                  <oj-input-number value="{{ $variables.newRequest.expected_annual_spend }}"></oj-input-number>
+                </div>
+                <div>
+                  <label class="field-label">Currency Code *</label>
+                  <oj-input-text value="{{ $variables.newRequest.currency_code }}"></oj-input-text>
+                </div>
+              </div>
+              <div>
+                <label class="field-label">Business Justification *</label>
+                <oj-text-area value="{{ $variables.newRequest.business_justification }}"></oj-text-area>
+              </div>
+            </div>
+
+            <div class="sp-form-block">
+              <h3>Address, Site &amp; Contact</h3>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Contact Person *</label>
+                  <oj-input-text value="{{ $variables.newRequest.contact_person }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">Contact Email *</label>
+                  <oj-input-text value="{{ $variables.newRequest.contact_email }}"></oj-input-text>
+                </div>
+              </div>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Phone</label>
+                  <oj-input-text value="{{ $variables.newRequest.contact_phone }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">Site Name *</label>
+                  <oj-input-text value="{{ $variables.newRequest.site_name }}"></oj-input-text>
+                </div>
+              </div>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Address Line 1 *</label>
+                  <oj-input-text value="{{ $variables.newRequest.address_line1 }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">City *</label>
+                  <oj-input-text value="{{ $variables.newRequest.city }}"></oj-input-text>
+                </div>
+              </div>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">State / Province</label>
+                  <oj-input-text value="{{ $variables.newRequest.state_or_province }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">Postal Code</label>
+                  <oj-input-text value="{{ $variables.newRequest.postal_code }}"></oj-input-text>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sp-grid-2" style="padding-top:0;">
+            <div class="sp-form-block">
+              <h3>Financial Routing</h3>
+              <div class="sp-field-row">
+                <div>
+                  <label class="field-label">Bank Country Code</label>
+                  <oj-input-text value="{{ $variables.newRequest.bank_country_code }}"></oj-input-text>
+                </div>
+                <div>
+                  <label class="field-label">Bank Account Number</label>
+                  <oj-input-text value="{{ $variables.newRequest.bank_account_raw }}"></oj-input-text>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Supporting Documents Block -->
+          <div style="padding: 0 16px 16px 16px;">
+            <div class="sp-form-block" style="margin-top: 12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3 style="margin:0;">📎 Supporting Documents</h3>
+                <span class="sp-doc-badge">
+                  <oj-bind-text value="[[ ($variables.requesterDocuments ? $variables.requesterDocuments.length : 0) + ' Attached' ]]"></oj-bind-text>
+                </span>
+              </div>
+
+              <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:10px 12px; font-size:12px; color:#166534; margin-bottom:12px;">
+                💡 <strong>Risk Mitigation Tip:</strong> Attaching supporting documentation (e.g. Tax Certificate, Bank Confirmation) eliminates the <strong>MISSING_EXPECTED_DOCUMENT</strong> risk factor (+5 points) during automated risk assessment.
+              </div>
+
+              <!-- Upload Controls (only in editable mode) -->
+              <oj-bind-if test="[[ !$variables.currentRequestReadOnly ]]">
+                <div class="sp-doc-upload-card">
+                  <div class="sp-doc-upload-controls">
+                    <div>
+                      <label class="field-label">Document Category *</label>
+                      <select on-change="[[ $listeners.onDocumentTypeChange ]]" style="width:100%; border:1px solid #cbd5e1; border-radius:6px; padding:7px 9px; font-size:12px; background:#fff;">
+                        <option value="TAX_CERTIFICATE" :selected="[[ $variables.selectedDocumentType === 'TAX_CERTIFICATE' ]]">📑 Tax Registration / Certificate</option>
+                        <option value="BANK_CONFIRMATION" :selected="[[ $variables.selectedDocumentType === 'BANK_CONFIRMATION' ]]">🏦 Bank Confirmation Letter / Void Cheque</option>
+                        <option value="BUSINESS_REGISTRATION" :selected="[[ $variables.selectedDocumentType === 'BUSINESS_REGISTRATION' ]]">🏢 Certificate of Incorporation / License</option>
+                        <option value="W9_W8_BEN" :selected="[[ $variables.selectedDocumentType === 'W9_W8_BEN' ]]">📋 W-9 / W-8BEN Form</option>
+                        <option value="COMPANY_PROFILE" :selected="[[ $variables.selectedDocumentType === 'COMPANY_PROFILE' ]]">📊 Company Profile / Presentation</option>
+                        <option value="OTHER" :selected="[[ $variables.selectedDocumentType === 'OTHER' ]]">📄 Other Supporting Document</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="field-label">Select File *</label>
+                      <input type="file" on-change="[[ $listeners.onDocumentFileSelected ]]" style="width:100%; font-size:12px; padding:5px 0;" />
+                    </div>
+                    <div>
+                      <button type="button" class="sp-btn sp-btn-primary" on-click="[[ $listeners.onUploadDocument ]]" :disabled="[[ $variables.documentUploadBusy || !$variables.selectedDocumentFileName ]]">
+                        <oj-bind-text value="[[ $variables.documentUploadBusy ? '⏳ Attaching…' : '⬆️ Attach Document' ]]"></oj-bind-text>
+                      </button>
+                    </div>
+                  </div>
+                  <oj-bind-if test="[[ $variables.selectedDocumentFileName ]]">
+                    <div style="font-size:11px; color:#475569; display:flex; align-items:center; gap:6px;">
+                      <span>Selected file: <strong><oj-bind-text value="[[ $variables.selectedDocumentFileName ]]"></oj-bind-text></strong></span>
+                    </div>
+                  </oj-bind-if>
+                </div>
+              </oj-bind-if>
+
+              <!-- Uploaded Documents List -->
+              <div style="margin-top:12px;">
+                <oj-bind-if test="[[ $variables.requesterDocuments && $variables.requesterDocuments.length > 0 ]]">
+                  <div style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden;">
+                    <oj-bind-for-each data="[[ $variables.requesterDocuments ]]">
+                      <template data-oj-as="doc">
+                        <div class="sp-doc-row">
+                          <span class="sp-doc-icon"><oj-bind-text value="[[ $functions.getDocumentTypeIcon(doc.data.document_type) ]]"></oj-bind-text></span>
+                          <div class="sp-doc-name">
+                            <div><oj-bind-text value="[[ doc.data.file_name || 'Document' ]]"></oj-bind-text></div>
+                            <div style="font-size:11px; font-weight:normal; color:#64748b;">
+                              <oj-bind-text value="[[ $functions.getDocumentTypeLabel(doc.data.document_type) ]]"></oj-bind-text>
+                            </div>
+                          </div>
+                          <oj-bind-if test="[[ doc.data.file_size ]]">
+                            <span class="sp-doc-meta"><oj-bind-text value="[[ $functions.formatFileSize(doc.data.file_size) ]]"></oj-bind-text></span>
+                          </oj-bind-if>
+                          <span class="sp-doc-meta"><oj-bind-text value="[[ $functions.formatDate(doc.data.uploaded_at) ]]"></oj-bind-text></span>
+                          <a :href="[[ $functions.getDocumentDownloadUrl(doc.data.request_id || $variables.currentRequestId, doc.data.document_id) ]]" target="_blank" rel="noopener noreferrer" class="sp-doc-action-btn" title="View / Download Document">👁️ View</a>
+                          <oj-bind-if test="[[ !$variables.currentRequestReadOnly ]]">
+                            <button type="button" class="sp-doc-del-btn" title="Remove Document" data-document-id="[[ doc.data.document_id ]]" on-click="[[ $listeners.onDeleteDocument ]]" :disabled="[[ $variables.documentDeleteBusy ]]">🗑️</button>
+                          </oj-bind-if>
+                        </div>
+                      </template>
+                    </oj-bind-for-each>
+                  </div>
+                </oj-bind-if>
+                <oj-bind-if test="[[ !$variables.requesterDocuments || $variables.requesterDocuments.length === 0 ]]">
+                  <div class="sp-empty-box" style="text-align:center; padding:16px; background:#fafafa; border:1px dashed #e2e8f0; border-radius:6px;">
+                    No supporting documents attached yet. Attach your tax certificate and bank confirmation to ensure fast approval.
+                  </div>
+                </oj-bind-if>
+              </div>
+            </div>
+          </div>
+        </section>
+      </oj-bind-if>
+
+      <!-- ======================================================= -->
+      <!-- VIEW: REVIEWER DETAIL VIEW                               -->
+      <!-- ======================================================= -->
+      <oj-bind-if test="[[ $variables.currentTab === 'review-detail' && $variables.currentRole === 'REVIEWER' ]]">
+        <section id="sp-view-review-detail" class="sp-section" style="display:block;">
+
+          <!-- Header -->
+          <div class="sp-section-head">
+            <div>
+              <button type="button" class="sp-detail-back" on-click="[[ $listeners.onBackToDashboard ]]">Back to Queue</button>
+              <h2>
+                <oj-bind-text value="[[ ($variables.reviewDetail.supplier_name || 'Loading…') + ' — ' + ($variables.reviewDetail.request_number || '') ]]"></oj-bind-text>
+              </h2>
+              <div class="sp-muted">
+                Status: <span class="sp-pill neutral"><oj-bind-text value="[[ $variables.reviewDetail.status || '—' ]]"></oj-bind-text></span>
+                &nbsp;|&nbsp; Requested by <oj-bind-text value="[[ $variables.reviewDetail.requester_display_name || '—' ]]"></oj-bind-text>
+                &nbsp;|&nbsp; Submitted: <oj-bind-text value="[[ $functions.formatDate($variables.reviewDetail.submitted_at) ]]"></oj-bind-text>
+              </div>
+            </div>
+            <div class="sp-actions">
+              <button type="button" class="sp-btn" on-click="[[ $listeners.onRefreshReviewDetail ]]">↺ Refresh</button>
+            </div>
+          </div>
+
+          <!-- Loading overlay -->
+          <oj-bind-if test="[[ $variables.reviewDetailLoading ]]">
+            <div class="sp-loading-detail">⏳ Loading request details from ORDS…</div>
+          </oj-bind-if>
+
+          <oj-bind-if test="[[ !$variables.reviewDetailLoading ]]">
+
+            <!-- ── SECTION 1: Supplier Identity ── -->
+            <div class="sp-info-grid">
+              <div class="sp-info-item">
+                <span class="sp-info-label">Supplier Name</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.supplier_name || '—' ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Supplier Type</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.supplier_type || '—' ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Country</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.country_code || '—' ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Business Unit</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.business_unit || '—' ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Contact</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.contact_person || '—' ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Contact Email</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.contact_email || '—' ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Address</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ ($variables.reviewDetail.address_line1 || '') + ', ' + ($variables.reviewDetail.city || '') + ' ' + ($variables.reviewDetail.country_code || '') ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Tax Reg (masked)</span>
+                <span class="sp-info-value masked"><oj-bind-text value="[[ $variables.reviewDetail.tax_registration_masked || '—' ]]"></oj-bind-text></span>
+              </div>
+              <div class="sp-info-item">
+                <span class="sp-info-label">Annual Spend</span>
+                <span class="sp-info-value"><oj-bind-text value="[[ $functions.formatCurrency($variables.reviewDetail.expected_annual_spend, $variables.reviewDetail.currency_code) ]]"></oj-bind-text></span>
+              </div>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 2: Business Justification ── -->
+            <div class="sp-section-inner">
+              <h3>Business Justification</h3>
+              <div style="font-size:13px; color:#334155; line-height:1.6; background:#f8fafc; border:1px solid #e2e8f0; border-radius:7px; padding:10px 12px;">
+                <oj-bind-text value="[[ $variables.reviewDetail.business_justification || '(none provided)' ]]"></oj-bind-text>
+              </div>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 3: Risk Assessment ── -->
+            <div class="sp-section-inner">
+              <h3>Risk Assessment</h3>
+              <div class="sp-score-display">
+                <span class="sp-score-num"><oj-bind-text value="[[ $variables.reviewDetail.risk_score != null ? ('' + $variables.reviewDetail.risk_score) : '—' ]]"></oj-bind-text></span>
+                <div>
+                  <span :class="[[ $functions.getRiskBadgeClass($variables.reviewDetail.risk_level) ]]"><oj-bind-text value="[[ $variables.reviewDetail.risk_level || 'Not assessed' ]]"></oj-bind-text></span>
+                  <div class="sp-score-detail">
+                    Deterministic: <oj-bind-text value="[[ $variables.reviewDetail.deterministic_risk_score != null ? ('' + $variables.reviewDetail.deterministic_risk_score) : '—' ]]"></oj-bind-text>
+                    &nbsp;| Reviewer adj: <oj-bind-text value="[[ $variables.reviewDetail.reviewer_adjustment_points != null ? ('+' + $variables.reviewDetail.reviewer_adjustment_points) : '+0' ]]"></oj-bind-text>
+                  </div>
+                </div>
+              </div>
+              <div class="sp-risk-bar-wrap">
+                <div class="sp-risk-bar-track">
+                  <div :class="[[ 'sp-risk-bar-fill ' + ($variables.reviewDetail.risk_level || 'low').toLowerCase() ]]"
+                       :style="[[ 'width:' + $functions.riskScoreToPercent($variables.reviewDetail.risk_score) + '%' ]]"></div>
+                </div>
+              </div>
+              <div style="margin-top:12px;">
+                <oj-bind-if test="[[ $functions.parseJsonSafe($variables.reviewDetail.risk_factors_json).length > 0 ]]">
+                  <ul class="sp-factor-list">
+                    <oj-bind-for-each data="[[ $functions.parseJsonSafe($variables.reviewDetail.risk_factors_json) ]]">
+                      <template data-oj-as="factor">
+                        <li :class="[[ 'sp-factor-item ' + $functions.factorSeverityClass(factor.data) ]]">
+                          <span class="factor-icon"><oj-bind-text value="[[ $functions.factorIcon(factor.data) ]]"></oj-bind-text></span>
+                          <span class="factor-text">
+                            <!-- DB field: rule_code (not factor_code) -->
+                            <strong><oj-bind-text value="[[ factor.data.rule_code || '' ]]"></oj-bind-text></strong>
+                            — <oj-bind-text value="[[ factor.data.evidence || '' ]]"></oj-bind-text>
+                            <oj-bind-if test="[[ factor.data.applied_weight ]]">
+                              &nbsp;<span class="sp-pill neutral"><oj-bind-text value="[[ '+' + factor.data.applied_weight + ' pts' ]]"></oj-bind-text></span>
+                            </oj-bind-if>
+                          </span>
+                        </li>
+                      </template>
+                    </oj-bind-for-each>
+                  </ul>
+                </oj-bind-if>
+                <oj-bind-if test="[[ $functions.parseJsonSafe($variables.reviewDetail.risk_factors_json).length === 0 ]]">
+                  <div class="sp-empty-box">No risk factors recorded.</div>
+                </oj-bind-if>
+              </div>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 4: Duplicate Detection ── -->
+            <div class="sp-section-inner">
+              <h3>Duplicate Detection</h3>
+              <div style="margin-bottom:10px;">
+                Duplicate level: <span :class="[[ $functions.getDuplicateBadgeClass($variables.reviewDetail.duplicate_level) ]]"><oj-bind-text value="[[ $variables.reviewDetail.duplicate_level || 'Not assessed' ]]"></oj-bind-text></span>
+              </div>
+              <oj-bind-if test="[[ $functions.parseJsonSafe($variables.reviewDetail.duplicate_matches_json).length > 0 ]]">
+                <oj-bind-for-each data="[[ $functions.parseJsonSafe($variables.reviewDetail.duplicate_matches_json) ]]">
+                  <template data-oj-as="match">
+                    <div class="sp-dup-card">
+                      <!-- DB stores weighted_score for SIMILARITY; EXACT matches show 100% -->
+                      <span class="dup-score"><oj-bind-text value="[[ (match.data.match_type === 'EXACT' ? '100' : (match.data.weighted_score != null ? match.data.weighted_score : '?')) + '%' ]]"></oj-bind-text></span>
+                      <div class="dup-name">
+                        <!-- DB stores fusion_supplier_number, not a display name -->
+                        Fusion Supplier: <oj-bind-text value="[[ match.data.fusion_supplier_number || '—' ]]"></oj-bind-text>
+                      </div>
+                      <div class="dup-reason">
+                        <oj-bind-if test="[[ match.data.match_type === 'EXACT' ]]">
+                          Exact match — Tax ID: <oj-bind-text value="[[ match.data.tax_match ? 'Yes' : 'No' ]]"></oj-bind-text>
+                          &nbsp;| Bank: <oj-bind-text value="[[ match.data.bank_match ? 'Yes' : 'No' ]]"></oj-bind-text>
+                        </oj-bind-if>
+                        <oj-bind-if test="[[ match.data.match_type !== 'EXACT' ]]">
+                          Name similarity: <oj-bind-text value="[[ match.data.name_similarity != null ? (match.data.name_similarity + '%') : '—' ]]"></oj-bind-text>
+                          &nbsp;| Address: <oj-bind-text value="[[ match.data.address_similarity != null ? (match.data.address_similarity + '%') : '—' ]]"></oj-bind-text>
+                        </oj-bind-if>
+                      </div>
+                    </div>
+                  </template>
+                </oj-bind-for-each>
+              </oj-bind-if>
+              <oj-bind-if test="[[ $functions.parseJsonSafe($variables.reviewDetail.duplicate_matches_json).length === 0 ]]">
+                <div class="sp-empty-box">No duplicate matches found.</div>
+              </oj-bind-if>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 5: Payment & Bank (masked) ── -->
+            <div class="sp-section-inner">
+              <h3>Payment &amp; Bank Details</h3>
+              <div class="sp-info-grid" style="padding:0;">
+                <div class="sp-info-item">
+                  <span class="sp-info-label">Bank Country</span>
+                  <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.bank_country_code || '—' ]]"></oj-bind-text></span>
+                </div>
+                <div class="sp-info-item">
+                  <span class="sp-info-label">Bank Account (last 4)</span>
+                  <span class="sp-info-value masked">••••&nbsp;<oj-bind-text value="[[ $variables.reviewDetail.bank_account_last_four || '?????' ]]"></oj-bind-text></span>
+                </div>
+                <div class="sp-info-item">
+                  <span class="sp-info-label">Bank Currency</span>
+                  <span class="sp-info-value"><oj-bind-text value="[[ $variables.reviewDetail.bank_currency_code || '—' ]]"></oj-bind-text></span>
+                </div>
+              </div>
+              <oj-bind-if test="[[ $variables.reviewDetail.bank_country_code && $variables.reviewDetail.country_code && $variables.reviewDetail.bank_country_code !== $variables.reviewDetail.country_code ]]">
+                <div class="sp-val-result val-warn" style="margin-top:10px;">
+                  ⚠ Bank country (<oj-bind-text value="[[ $variables.reviewDetail.bank_country_code ]]"></oj-bind-text>) differs from supplier country (<oj-bind-text value="[[ $variables.reviewDetail.country_code ]]"></oj-bind-text>). Verify payment routing.
+                </div>
+              </oj-bind-if>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 6: Validation Results ── -->
+            <div class="sp-section-inner">
+              <h3>Validation Results</h3>
+              <div style="margin-bottom:8px;">
+                Status: <span class="sp-pill neutral"><oj-bind-text value="[[ $variables.reviewDetail.validation_status || 'N/A' ]]"></oj-bind-text></span>
+              </div>
+              <oj-bind-if test="[[ $functions.parseJsonSafe($variables.reviewDetail.validation_results_json).length > 0 ]]">
+                <oj-bind-for-each data="[[ $functions.parseJsonSafe($variables.reviewDetail.validation_results_json) ]]">
+                  <template data-oj-as="vr">
+                    <div :class="[[ $functions.validationResultClass(vr.data) ]]">
+                      <oj-bind-text value="[[ $functions.formatValidationResult(vr.data) ]]"></oj-bind-text>
+                    </div>
+                  </template>
+                </oj-bind-for-each>
+              </oj-bind-if>
+              <oj-bind-if test="[[ $functions.parseJsonSafe($variables.reviewDetail.validation_results_json).length === 0 ]]">
+                <div class="sp-empty-box">No validation results recorded.</div>
+              </oj-bind-if>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 7: AI Summary ── -->
+            <div class="sp-section-inner">
+              <h3>AI Advisory (Gemini)</h3>
+              <oj-bind-if test="[[ $variables.reviewDetail.latest_ai_summary ]]">
+                <div class="sp-ai-box">
+                  <div class="ai-label">
+                    Summary &nbsp;·&nbsp;
+                    <oj-bind-text value="[[ $variables.reviewDetail.latest_ai_model_name || 'AI' ]]"></oj-bind-text>
+                    &nbsp;·&nbsp; Status: <oj-bind-text value="[[ $variables.reviewDetail.latest_ai_status || '—' ]]"></oj-bind-text>
+                    &nbsp;·&nbsp; Justification quality: <oj-bind-text value="[[ $variables.reviewDetail.latest_justification_quality || '—' ]]"></oj-bind-text>
+                  </div>
+                  <div><oj-bind-text value="[[ $variables.reviewDetail.latest_ai_summary ]]"></oj-bind-text></div>
+                  <oj-bind-if test="[[ $variables.reviewDetail.latest_ai_recommended_actions ]]">
+                    <div class="sp-ai-actions">
+                      <strong>Recommended actions:</strong>&nbsp;<oj-bind-text value="[[ $variables.reviewDetail.latest_ai_recommended_actions ]]"></oj-bind-text>
+                    </div>
+                  </oj-bind-if>
+                </div>
+              </oj-bind-if>
+              <oj-bind-if test="[[ !$variables.reviewDetail.latest_ai_summary ]]">
+                <div class="sp-empty-box">No AI summary available. AI assessment may not have run yet.</div>
+              </oj-bind-if>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 8: Justification Risk Adjustment ── -->
+            <oj-bind-if test="[[ $functions.canDecide($variables.reviewDetail.status) ]]">
+              <div class="sp-section-inner">
+                <h3>⚖️ Justification Risk Adjustment</h3>
+                <p class="sp-muted" style="margin-bottom:12px;">
+                  Adjust risk score based on business justification quality. Clear, well-justified requests incur <strong>0 extra risk</strong>. If justification is vague, weak, or high-risk, apply penalty points (+3, +5, or +10).
+                  <oj-bind-if test="[[ $variables.reviewDetail.latest_justification_quality ]]">
+                    <br/>AI-assessed justification quality: <strong><oj-bind-text value="[[ $variables.reviewDetail.latest_justification_quality ]]"></oj-bind-text></strong>.
+                  </oj-bind-if>
+                </p>
+                <div class="sp-decision-field">
+                  <label>Risk Adjustment</label>
+                  <select on-change="[[ $listeners.onJustAdjPointsChange ]]">
+                    <option value="0"  :selected="[[ $variables.justAdj.points === 0  ]]">0 — Excellent / Clear justification (0 extra risk)</option>
+                    <option value="3"  :selected="[[ $variables.justAdj.points === 3  ]]">+3 — Minor justification concern (+3 risk points)</option>
+                    <option value="5"  :selected="[[ $variables.justAdj.points === 5  ]]">+5 — Moderate justification concern (+5 risk points)</option>
+                    <option value="10" :selected="[[ $variables.justAdj.points === 10 ]]">+10 — High justification risk / Vague (+10 risk points)</option>
+                  </select>
+                </div>
+                <div class="sp-decision-field">
+                  <label>Reason *</label>
+                  <textarea rows="2"
+                            :value="[[ $variables.justAdj.reason ]]"
+                            on-input="[[ $listeners.onJustAdjReasonInput ]]"
+                            placeholder="Explain why you are applying this adjustment…"></textarea>
+                </div>
+                <div class="sp-decision-row">
+                  <button type="button"
+                          class="sp-btn"
+                          style="background:#6c63ff;color:#fff;"
+                          :disabled="[[ $variables.justAdjBusy || !$variables.justAdj.reason ]]"
+                          on-click="[[ $listeners.onApplyJustAdj ]]">
+                    <oj-bind-if test="[[ !$variables.justAdjBusy ]]">Apply Adjustment</oj-bind-if>
+                    <oj-bind-if test="[[ $variables.justAdjBusy ]]">Applying…</oj-bind-if>
+                  </button>
+                </div>
+                <oj-bind-if test="[[ $variables.justAdjMessage ]]">
+                  <div :class="[[ $variables.justAdjMessage.indexOf('Failed') === -1 ? 'sp-val-result val-ok' : 'sp-val-result val-fail' ]]">
+                    <oj-bind-text value="[[ $variables.justAdjMessage ]]"></oj-bind-text>
+                  </div>
+                </oj-bind-if>
+              </div>
+
+              <hr class="sp-divider"/>
+            </oj-bind-if>
+
+            <!-- ── SECTION 9: Documents ── -->
+            <div class="sp-section-inner">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0;">Uploaded Documents</h3>
+                <div>
+                  <oj-bind-if test="[[ $variables.reviewDetailDocuments && $variables.reviewDetailDocuments.length > 0 ]]">
+                    <span class="sp-pill success">✔ <oj-bind-text value="[[ $variables.reviewDetailDocuments.length + ' Document(s) Attached' ]]"></oj-bind-text></span>
+                  </oj-bind-if>
+                  <oj-bind-if test="[[ !$variables.reviewDetailDocuments || $variables.reviewDetailDocuments.length === 0 ]]">
+                    <span class="sp-pill warning">⚠ No Documents Attached (+5 Risk)</span>
+                  </oj-bind-if>
+                </div>
+              </div>
+
+              <oj-bind-if test="[[ $variables.reviewDetailDocuments && $variables.reviewDetailDocuments.length > 0 ]]">
+                <div style="border:1px solid #e2e8f0; border-radius:7px; overflow:hidden;">
+                  <oj-bind-for-each data="[[ $variables.reviewDetailDocuments ]]">
+                    <template data-oj-as="doc">
+                      <div class="sp-doc-row">
+                        <span class="sp-doc-icon"><oj-bind-text value="[[ $functions.getDocumentTypeIcon(doc.data.document_type) ]]"></oj-bind-text></span>
+                        <div class="sp-doc-name">
+                          <div><oj-bind-text value="[[ doc.data.file_name || doc.data.document_name || 'Document' ]]"></oj-bind-text></div>
+                          <div style="font-size:11px; font-weight:normal; color:#64748b;">
+                            <oj-bind-text value="[[ $functions.getDocumentTypeLabel(doc.data.document_type) ]]"></oj-bind-text>
+                          </div>
+                        </div>
+                        <oj-bind-if test="[[ doc.data.file_size ]]">
+                          <span class="sp-doc-meta"><oj-bind-text value="[[ $functions.formatFileSize(doc.data.file_size) ]]"></oj-bind-text></span>
+                        </oj-bind-if>
+                        <span class="sp-doc-meta"><oj-bind-text value="[[ $functions.formatDate(doc.data.uploaded_at || doc.data.created_at) ]]"></oj-bind-text></span>
+                        <span class="sp-doc-meta" style="color:#475569; font-weight:600;"><oj-bind-text value="[[ doc.data.uploaded_by_subject_id || '' ]]"></oj-bind-text></span>
+                        <a :href="[[ $functions.getDocumentDownloadUrl(doc.data.request_id || $variables.reviewDetail.request_id, doc.data.document_id) ]]" target="_blank" rel="noopener noreferrer" class="sp-doc-action-btn" title="View / Download Document">👁️ View</a>
+                      </div>
+                    </template>
+                  </oj-bind-for-each>
+                </div>
+              </oj-bind-if>
+              <oj-bind-if test="[[ !$variables.reviewDetailDocuments || $variables.reviewDetailDocuments.length === 0 ]]">
+                <div class="sp-empty-box" style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; color:#92400e; padding:12px 14px;">
+                  ⚠️ <strong>No documents attached:</strong> No supporting files were uploaded with this request. The risk engine flagged rule <code>MISSING_EXPECTED_DOCUMENT</code>.
+                </div>
+              </oj-bind-if>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── SECTION 9: DECISION PANEL ── -->
+            <oj-bind-if test="[[ $functions.canDecide($variables.reviewDetail.status) ]]">
+              <div class="sp-decision-panel decision-pending">
+                <div class="sp-decision-title">🔍 Review Decision</div>
+
+                <div class="sp-decision-field">
+                  <label>Decision *</label>
+                  <select on-change="[[ $listeners.onDecisionChange ]]">
+                    <option value="" :selected="[[ !$variables.reviewDecision.decision ]]">— Select a decision —</option>
+                    <option value="APPROVE" :selected="[[ $variables.reviewDecision.decision === 'APPROVE' ]]">✅ Approve — submit to Fusion via OIC</option>
+                    <option value="REJECT" :selected="[[ $variables.reviewDecision.decision === 'REJECT' ]]">❌ Reject — close request</option>
+                    <option value="DUPLICATE" :selected="[[ $variables.reviewDecision.decision === 'DUPLICATE' ]]">🔁 Mark as Duplicate</option>
+                    <option value="REQUEST_CORRECTION" :selected="[[ $variables.reviewDecision.decision === 'REQUEST_CORRECTION' ]]">✏️ Request Correction from Requester</option>
+                  </select>
+                </div>
+
+                <div class="sp-decision-field">
+                  <label>
+                    <oj-bind-if test="[[ $variables.reviewDecision.decision === 'APPROVE' ]]">Approval Note (optional)</oj-bind-if>
+                    <oj-bind-if test="[[ $variables.reviewDecision.decision === 'REJECT' ]]">Rejection Reason *</oj-bind-if>
+                    <oj-bind-if test="[[ $variables.reviewDecision.decision === 'DUPLICATE' ]]">Duplicate Reason *</oj-bind-if>
+                    <oj-bind-if test="[[ $variables.reviewDecision.decision === 'REQUEST_CORRECTION' ]]">Correction Instructions *</oj-bind-if>
+                    <oj-bind-if test="[[ !$variables.reviewDecision.decision ]]">Reason / Notes</oj-bind-if>
+                  </label>
+                  <textarea rows="3"
+                            :value="[[ $variables.reviewDecision.reason ]]"
+                            on-input="[[ $listeners.onDecisionReasonInput ]]"
+                            placeholder="Enter reason or notes for this decision…"></textarea>
+                </div>
+
+                <!-- Existing supplier field — only for DUPLICATE -->
+                <oj-bind-if test="[[ $variables.reviewDecision.decision === 'DUPLICATE' ]]">
+                  <div class="sp-decision-field">
+                    <label>Existing Supplier ID / Number (optional)</label>
+                    <input type="text"
+                           :value="[[ $variables.reviewDecision.existing_supplier_id ]]"
+                           on-input="[[ $listeners.onExistingSupplierIdInput ]]"
+                           placeholder="e.g. 300000012345678"/>
+                    <div class="sp-muted" style="margin-top:4px;">Reference the existing Fusion supplier the requester should use instead.</div>
+                  </div>
+                </oj-bind-if>
+
+                <div class="sp-decision-row">
+                  <button type="button"
+                          class="sp-btn success"
+                          :disabled="[[ !$variables.reviewDecision.decision || $variables.reviewDecisionBusy ]]"
+                          on-click="[[ $listeners.onSubmitDecision ]]">
+                    <oj-bind-if test="[[ !$variables.reviewDecisionBusy ]]">Submit Decision</oj-bind-if>
+                    <oj-bind-if test="[[ $variables.reviewDecisionBusy ]]">Submitting…</oj-bind-if>
+                  </button>
+                  <button type="button" class="sp-btn" on-click="[[ $listeners.onClearDecision ]]">Clear</button>
+                </div>
+
+                <oj-bind-if test="[[ $variables.reviewDecisionError ]]">
+                  <div class="sp-val-result val-fail"><oj-bind-text value="[[ $variables.reviewDecisionError ]]"></oj-bind-text></div>
+                </oj-bind-if>
+              </div>
+            </oj-bind-if>
+
+            <!-- Already decided — read-only result -->
+            <oj-bind-if test="[[ !$functions.canDecide($variables.reviewDetail.status) && $variables.reviewDetail.status ]]">
+              <div class="sp-decision-panel">
+                <div class="sp-decision-title">Decision Recorded</div>
+                <div :class="[[ 'sp-decision-result ' + ($variables.reviewDetail.status || '').toLowerCase() ]]">
+                  Status: <strong><oj-bind-text value="[[ $variables.reviewDetail.status ]]"></oj-bind-text></strong>
+                  &nbsp;·&nbsp; Reviewed: <oj-bind-text value="[[ $functions.formatDate($variables.reviewDetail.reviewed_at) ]]"></oj-bind-text>
+                  <oj-bind-if test="[[ $variables.reviewDetail.fusion_supplier_number ]]">
+                    &nbsp;·&nbsp; Fusion: <strong><oj-bind-text value="[[ $variables.reviewDetail.fusion_supplier_number ]]"></oj-bind-text></strong>
+                  </oj-bind-if>
+                </div>
+              </div>
+            </oj-bind-if>
+
+          </oj-bind-if><!-- end !reviewDetailLoading -->
+        </section>
+      </oj-bind-if>
+
+
+      <!-- ======================================================= -->
+      <!-- VIEW: ADMIN OIC & FUSION LOGS                            -->
+      <!-- ======================================================= -->
+      <oj-bind-if test="[[ $variables.currentTab === 'integration-logs' && $variables.currentRole === 'ADMIN' ]]">
+        <section id="sp-view-integration-logs" class="sp-section" style="display:block;">
+          <div class="sp-section-head">
+            <div>
+              <h2>OIC &amp; Fusion Integration Logs</h2>
+              <div class="sp-muted">All OIC orchestration jobs and Fusion Supplier Master creation events, with retry controls for eligible failures.</div>
+            </div>
+            <div class="sp-actions">
+              <button type="button" class="sp-btn" on-click="[[ $listeners.onRefreshLogs ]]">
+                <oj-bind-if test="[[ !$variables.integrationLogsLoading ]]">↺ Refresh</oj-bind-if>
+                <oj-bind-if test="[[ $variables.integrationLogsLoading ]]">Loading…</oj-bind-if>
+              </button>
+            </div>
+          </div>
+
+          <!-- ERROR -->
+          <oj-bind-if test="[[ $variables.integrationLogsError ]]">
+            <div style="padding:8px 16px;"><span class="sp-pill high"><oj-bind-text value="[[ $variables.integrationLogsError ]]"></oj-bind-text></span></div>
+          </oj-bind-if>
+
+          <!-- ADMIN STATS -->
+          <div class="sp-admin-stats">
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeAdminStats($variables.integrationLogs).total ]]"></oj-bind-text></span>
+              <span class="sp-muted">Total Jobs</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeAdminStats($variables.integrationLogs).pending ]]"></oj-bind-text></span>
+              <span class="sp-muted">Pending / Running</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeAdminStats($variables.integrationLogs).completed ]]"></oj-bind-text></span>
+              <span class="sp-muted">Completed</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeAdminStats($variables.integrationLogs).failed ]]"></oj-bind-text></span>
+              <span class="sp-muted">Failed</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeAdminStats($variables.integrationLogs).retryable ]]"></oj-bind-text></span>
+              <span class="sp-muted">Retryable</span>
+            </div>
+          </div>
+
+          <!-- FILTERS -->
+          <div class="sp-filters">
+            <div>
+              <label class="field-label">Status</label>
+              <select on-change="[[ $listeners.onFilterLogStatusChange ]]">
+                <option value="ALL"         :selected="[[ $variables.filterLogStatus === 'ALL' ]]">All Statuses</option>
+                <option value="READY"       :selected="[[ $variables.filterLogStatus === 'READY' ]]">Ready</option>
+                <option value="CLAIMED"     :selected="[[ $variables.filterLogStatus === 'CLAIMED' ]]">Claimed</option>
+                <option value="IN_PROGRESS" :selected="[[ $variables.filterLogStatus === 'IN_PROGRESS' ]]">In Progress</option>
+                <option value="SUCCEEDED"   :selected="[[ $variables.filterLogStatus === 'SUCCEEDED' ]]">Succeeded</option>
+                <option value="FAILED"      :selected="[[ $variables.filterLogStatus === 'FAILED' ]]">Failed</option>
+                <option value="CANCELLED"   :selected="[[ $variables.filterLogStatus === 'CANCELLED' ]]">Cancelled</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Integration Type</label>
+              <select on-change="[[ $listeners.onFilterLogTypeChange ]]">
+                <option value="ALL"            :selected="[[ $variables.filterLogType === 'ALL' ]]">All Types</option>
+                <option value="FUSION_CREATE"  :selected="[[ $variables.filterLogType === 'FUSION_CREATE' ]]">Fusion Supplier Create</option>
+                <option value="AI_EXPLANATION" :selected="[[ $variables.filterLogType === 'AI_EXPLANATION' ]]">AI Risk Explanation</option>
+                <option value="SUPPLIER_SYNC"  :selected="[[ $variables.filterLogType === 'SUPPLIER_SYNC' ]]">Supplier Reference Sync</option>
+              </select>
+            </div>
+            <div></div>
+            <div></div>
+          </div>
+
+          <!-- LOG TABLE -->
+          <oj-bind-if test="[[ !$variables.integrationLogsLoading ]]">
+            <oj-bind-if test="[[ $functions.filterLogs($variables.integrationLogs, $variables.filterLogStatus, $variables.filterLogType).length === 0 ]]">
+              <div class="sp-empty-logs">No integration log entries match the current filters.</div>
+            </oj-bind-if>
+            <oj-bind-if test="[[ $functions.filterLogs($variables.integrationLogs, $variables.filterLogStatus, $variables.filterLogType).length > 0 ]]">
+              <div class="sp-log-header">
+                <span>Status</span>
+                <span>Request / Supplier</span>
+                <span>Type</span>
+                <span>OIC Instance</span>
+                <span>Updated</span>
+                <span>Action</span>
+              </div>
+              <oj-bind-for-each data="[[ $functions.filterLogs($variables.integrationLogs, $variables.filterLogStatus, $variables.filterLogType) ]]">
+                <template data-oj-as="log">
+                  <div class="sp-log-row">
+
+                    <!-- Status pill -->
+                    <span :class="[[ $functions.getLogStatusClass(log.data.status) ]]">
+                      <oj-bind-text value="[[ log.data.status || '—' ]]"></oj-bind-text>
+                    </span>
+
+                    <!-- Request / supplier info -->
+                    <div>
+                      <div class="sp-log-type">
+                        <oj-bind-text value="[[ log.data.request_number || ('Request #' + log.data.request_id) ]]"></oj-bind-text>
+                        &nbsp;—&nbsp;
+                        <oj-bind-text value="[[ log.data.supplier_name || '' ]]"></oj-bind-text>
+                      </div>
+                      <div class="sp-log-meta">
+                        <oj-bind-text value="[[ $functions.formatIntegrationType(log.data.integration_type) ]]"></oj-bind-text>
+                        <oj-bind-if test="[[ log.data.fusion_supplier_number ]]">
+                          &nbsp;· Fusion: <oj-bind-text value="[[ log.data.fusion_supplier_number ]]"></oj-bind-text>
+                        </oj-bind-if>
+                      </div>
+                      <oj-bind-if test="[[ log.data.error_message ]]">
+                        <div class="sp-log-err">⚠ <oj-bind-text value="[[ log.data.error_message ]]"></oj-bind-text></div>
+                      </oj-bind-if>
+                    </div>
+
+                    <!-- Integration type badge -->
+                    <span class="sp-pill neutral" style="font-size:10px;">
+                      <oj-bind-text value="[[ (log.data.integration_type || '—').replace(/_/g, ' ') ]]"></oj-bind-text>
+                    </span>
+
+                    <!-- OIC instance ID + correlation ID -->
+                    <div>
+                      <div class="sp-log-ref"><oj-bind-text value="[[ log.data.oic_instance_id || '—' ]]"></oj-bind-text></div>
+                      <oj-bind-if test="[[ log.data.correlation_id ]]">
+                        <div class="sp-log-meta">Corr: <oj-bind-text value="[[ log.data.correlation_id ]]"></oj-bind-text></div>
+                      </oj-bind-if>
+                    </div>
+
+                    <!-- Timestamp -->
+                    <div class="sp-muted">
+                      <oj-bind-text value="[[ $functions.formatDate(log.data.updated_at || log.data.created_at) ]]"></oj-bind-text>
+                    </div>
+
+                    <!-- Retry button (only for retryable failures) -->
+                    <div>
+                      <oj-bind-if test="[[ $functions.isRetryable(log.data) ]]">
+                        <button type="button"
+                                class="sp-btn retry"
+                                :disabled="[[ $variables.retryBusyId === ('' + log.data.request_id) ]]"
+                                on-click="[[ $listeners.onRetryRequest ]]"
+                                :data-request-id="[[ log.data.request_id ]]">
+                          <oj-bind-if test="[[ $variables.retryBusyId !== ('' + log.data.request_id) ]]">↺ Retry</oj-bind-if>
+                          <oj-bind-if test="[[ $variables.retryBusyId === ('' + log.data.request_id) ]]">…</oj-bind-if>
+                        </button>
+                      </oj-bind-if>
+                      <oj-bind-if test="[[ !$functions.isRetryable(log.data) && (log.data.status || '').toUpperCase() === 'FAILED' ]]">
+                        <span class="sp-muted" style="font-size:10px;">Not retryable</span>
+                      </oj-bind-if>
+                    </div>
+
+                  </div>
+                </template>
+              </oj-bind-for-each>
+            </oj-bind-if>
+          </oj-bind-if>
+
+          <oj-bind-if test="[[ $variables.integrationLogsLoading ]]">
+            <div class="sp-loading-detail">⏳ Fetching OIC &amp; Fusion log entries from ORDS…</div>
+          </oj-bind-if>
+
+          <div class="sp-footer-note">
+            Integration log data is read from <code>integration_log_safe_v</code> via ORDS. Retry is available only for jobs where <code>retryable = 'Y'</code> and status is <code>FAILED</code>. Retrying queues a new OIC integration job via <code>/requests/:id/retry</code>.
+          </div>
+        </section>
+      </oj-bind-if>
+
+
+      <!-- ======================================================= -->
+      <!-- VIEW: ADMIN ACTION HISTORY                               -->
+      <!-- ======================================================= -->
+      <oj-bind-if test="[[ $variables.currentTab === 'action-history' && $variables.currentRole === 'ADMIN' ]]">
+        <section id="sp-view-action-history" class="sp-section" style="display:block;">
+
+          <div class="sp-section-head">
+            <div>
+              <h2>Portal Action History</h2>
+              <div class="sp-muted">Complete audit trail of all supplier portal actions — status transitions, review decisions, submissions, document uploads, risk adjustments, and integration events.</div>
+            </div>
+            <div class="sp-actions">
+              <button type="button" class="sp-btn" on-click="[[ $listeners.onRefreshHistory ]]">
+                <oj-bind-if test="[[ !$variables.actionHistoryLoading ]]">↺ Refresh</oj-bind-if>
+                <oj-bind-if test="[[ $variables.actionHistoryLoading ]]">Loading…</oj-bind-if>
+              </button>
+            </div>
+          </div>
+
+          <!-- ERROR -->
+          <oj-bind-if test="[[ $variables.actionHistoryError ]]">
+            <div style="padding:8px 16px;">
+              <span class="sp-pill high"><oj-bind-text value="[[ $variables.actionHistoryError ]]"></oj-bind-text></span>
+            </div>
+          </oj-bind-if>
+
+          <!-- SUMMARY STATS -->
+          <div class="sp-history-stats">
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeHistoryStats($variables.actionHistory).total ]]"></oj-bind-text></span>
+              <span class="sp-muted">Total Actions</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeHistoryStats($variables.actionHistory).submissions ]]"></oj-bind-text></span>
+              <span class="sp-muted">Submissions</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeHistoryStats($variables.actionHistory).approved ]]"></oj-bind-text></span>
+              <span class="sp-muted">Approvals</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeHistoryStats($variables.actionHistory).rejected ]]"></oj-bind-text></span>
+              <span class="sp-muted">Rejections / Dupes</span>
+            </div>
+            <div class="sp-stat">
+              <span class="num"><oj-bind-text value="[[ '' + $functions.computeHistoryStats($variables.actionHistory).corrections ]]"></oj-bind-text></span>
+              <span class="sp-muted">Corrections Sent</span>
+            </div>
+          </div>
+
+          <!-- SEARCH + FILTER BAR -->
+          <div class="sp-history-search">
+            <div style="flex:0 0 200px;">
+              <label class="field-label">Action Type</label>
+              <select on-change="[[ $listeners.onFilterHistoryActionTypeChange ]]" style="width:100%;border:1px solid #cbd5e1;border-radius:7px;padding:7px 9px;font-size:12px;">
+                <oj-bind-for-each data="[[ $functions.buildActionTypeOptions($variables.actionHistory) ]]">
+                  <template data-oj-as="opt">
+                    <option :value="[[ opt.data.value ]]" :selected="[[ opt.data.value === $variables.filterHistoryActionType ]]">
+                      <oj-bind-text value="[[ opt.data.label ]]"></oj-bind-text>
+                    </option>
+                  </template>
+                </oj-bind-for-each>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label class="field-label">Search by Request Number or ID</label>
+              <input type="text"
+                     :value="[[ $variables.filterHistoryRequestId ]]"
+                     on-input="[[ $listeners.onFilterHistoryRequestIdInput ]]"
+                     placeholder="e.g. REQ-1004 or 42…"/>
+            </div>
+          </div>
+
+          <!-- TABLE -->
+          <oj-bind-if test="[[ $variables.actionHistoryLoading ]]">
+            <div class="sp-loading-detail">⏳ Loading action history from ORDS…</div>
+          </oj-bind-if>
+
+          <oj-bind-if test="[[ !$variables.actionHistoryLoading ]]">
+            <oj-bind-if test="[[ $functions.filterHistory($variables.actionHistory, $variables.filterHistoryActionType, $variables.filterHistoryRequestId).length === 0 ]]">
+              <div class="sp-empty-logs">No action history entries match the current filters.</div>
+            </oj-bind-if>
+
+            <oj-bind-if test="[[ $functions.filterHistory($variables.actionHistory, $variables.filterHistoryActionType, $variables.filterHistoryRequestId).length > 0 ]]">
+              <div class="sp-hist-header">
+                <span></span>
+                <span>Action</span>
+                <span>Request / Details</span>
+                <span>Actor</span>
+                <span>Role</span>
+                <span>Timestamp</span>
+              </div>
+
+              <oj-bind-for-each data="[[ $functions.filterHistory($variables.actionHistory, $variables.filterHistoryActionType, $variables.filterHistoryRequestId) ]]">
+                <template data-oj-as="entry">
+                  <div class="sp-hist-row">
+
+                    <!-- Icon -->
+                    <div class="sp-hist-icon">
+                      <oj-bind-text value="[[ $functions.getActionTypeIcon(entry.data.action_type) ]]"></oj-bind-text>
+                    </div>
+
+                    <!-- Action type badge -->
+                    <div>
+                      <span :class="[[ $functions.getActionTypeBadgeClass(entry.data.action_type) ]]" style="font-size:10px;">
+                        <oj-bind-text value="[[ (entry.data.action_type || '—').replace(/_/g,' ') ]]"></oj-bind-text>
+                      </span>
+                    </div>
+
+                    <!-- Request + detail -->
+                    <div>
+                      <div class="sp-hist-request">
+                        <oj-bind-text value="[[ entry.data.request_number || ('Request #' + entry.data.request_id) ]]"></oj-bind-text>
+                      </div>
+                      <div class="sp-hist-supplier">
+                        <oj-bind-text value="[[ entry.data.supplier_name || '' ]]"></oj-bind-text>
+                        <oj-bind-if test="[[ entry.data.business_unit ]]">
+                          &nbsp;·&nbsp;<oj-bind-text value="[[ entry.data.business_unit ]]"></oj-bind-text>
+                        </oj-bind-if>
+                      </div>
+                      <oj-bind-if test="[[ entry.data.action_note || entry.data.reason || entry.data.decision_reason ]]">
+                        <div class="sp-hist-detail">
+                          <span class="detail-note">
+                            "<oj-bind-text value="[[ entry.data.action_note || entry.data.reason || entry.data.decision_reason ]]"></oj-bind-text>"
+                          </span>
+                        </div>
+                      </oj-bind-if>
+                      <oj-bind-if test="[[ entry.data.new_status ]]">
+                        <div class="sp-hist-detail">
+                          <span class="sp-muted">→ </span>
+                          <span class="sp-pill neutral" style="font-size:10px;">
+                            <oj-bind-text value="[[ entry.data.new_status ]]"></oj-bind-text>
+                          </span>
+                          <oj-bind-if test="[[ entry.data.previous_status ]]">
+                            <span class="sp-muted" style="font-size:10px;">
+                              &nbsp;(was&nbsp;<oj-bind-text value="[[ entry.data.previous_status ]]"></oj-bind-text>)
+                            </span>
+                          </oj-bind-if>
+                        </div>
+                      </oj-bind-if>
+                    </div>
+
+                    <!-- Actor display name -->
+                    <div class="sp-hist-actor">
+                      <oj-bind-text value="[[ entry.data.actor_display_name || entry.data.actor_subject_id || '—' ]]"></oj-bind-text>
+                    </div>
+
+                    <!-- Actor role -->
+                    <div>
+                      <oj-bind-if test="[[ entry.data.actor_role ]]">
+                        <span class="actor-role"><oj-bind-text value="[[ entry.data.actor_role ]]"></oj-bind-text></span>
+                      </oj-bind-if>
+                    </div>
+
+                    <!-- Timestamp -->
+                    <div class="sp-hist-time">
+                      <oj-bind-text value="[[ $functions.formatDate(entry.data.action_at || entry.data.created_at) ]]"></oj-bind-text>
+                    </div>
+
+                  </div>
+                </template>
+              </oj-bind-for-each>
+            </oj-bind-if>
+          </oj-bind-if>
+
+          <div class="sp-footer-note">
+            Action history is read from <code>request_action_history</code> via <code>GET /action-history</code>.
+            This table is populated automatically by the <code>supplier_request_pkg</code>, <code>supplier_review_pkg</code>,
+            and <code>supplier_integration_pkg</code> packages on every status transition.
+            See the ORDS SQL block below for the endpoint you need to add.
+          </div>
+        </section>
+      </oj-bind-if>
+      </oj-bind-if>
+
+
+      <!-- ======================================================= -->
+      <!-- VIEW: ADMIN RISK CONFIG                                  -->
+      <!-- ======================================================= -->
+      <oj-bind-if test="[[ $variables.currentTab === 'admin-config' && $variables.currentRole === 'ADMIN' ]]">
+        <section id="sp-view-admin-config" class="sp-section" style="display:block;">
+          <div class="sp-section-head">
+            <div>
+              <h2>⚙️ Risk Configuration</h2>
+              <div class="sp-muted">Manage risk rule weights and high-risk country list. Changes take effect on the next assessment run.</div>
+            </div>
+            <div class="sp-actions">
+              <button type="button" class="sp-btn" on-click="[[ $listeners.onRefreshAdminConfig ]]">↺ Refresh</button>
+            </div>
+          </div>
+
+          <oj-bind-if test="[[ $variables.adminConfigLoading ]]">
+            <div class="sp-empty-box">Loading configuration…</div>
+          </oj-bind-if>
+          <oj-bind-if test="[[ $variables.adminConfigError ]]">
+            <div class="sp-val-result val-fail" style="margin:12px 0;"><oj-bind-text value="[[ $variables.adminConfigError ]]"></oj-bind-text></div>
+          </oj-bind-if>
+
+          <oj-bind-if test="[[ !$variables.adminConfigLoading ]]">
+
+            <!-- ── PANEL 1: Risk Rule Weights ── -->
+            <div class="sp-section-inner">
+              <h3>Risk Rule Weights</h3>
+              <p class="sp-muted" style="margin-bottom:12px;">
+                Each rule's weight determines how many risk points it contributes (0–100).
+                Total active BASE weights must equal exactly 100. Edit weights inline and click Save All Weights.
+              </p>
+
+              <oj-bind-if test="[[ $variables.riskRules.length > 0 ]]">
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                  <thead>
+                    <tr style="background:#f1f5f9;text-align:left;">
+                      <th style="padding:8px 12px;">Rule Code</th>
+                      <th style="padding:8px 12px;">Name</th>
+                      <th style="padding:8px 12px;">Component</th>
+                      <th style="padding:8px 12px;text-align:center;">Weight</th>
+                      <th style="padding:8px 12px;text-align:center;">Active</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <oj-bind-for-each data="[[ $variables.riskRules ]]">
+                      <template data-oj-as="rule">
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:8px 12px;"><code><oj-bind-text value="[[ rule.data.rule_code ]]"></oj-bind-text></code></td>
+                          <td style="padding:8px 12px;"><oj-bind-text value="[[ rule.data.rule_name || rule.data.rule_code ]]"></oj-bind-text></td>
+                          <td style="padding:8px 12px;">
+                            <span :class="[[ rule.data.component === 'BASE' ? 'sp-pill medium' : 'sp-pill neutral' ]]">
+                              <oj-bind-text value="[[ rule.data.component ]]"></oj-bind-text>
+                            </span>
+                          </td>
+                          <td style="padding:8px 12px;text-align:center;">
+                            <oj-input-number min="0" max="100"
+                                   value="{{ $variables.riskRules[rule.index].weight }}"
+                                   on-value-changed="[[ $listeners.onRuleWeightChange ]]"
+                                   style="width:80px;text-align:center;"></oj-input-number>
+                          </td>
+                          <td style="padding:8px 12px;text-align:center;">
+                            <span :class="[[ rule.data.active === 'Y' ? 'sp-pill low' : 'sp-pill neutral' ]]">
+                              <oj-bind-text value="[[ rule.data.active === 'Y' ? 'Active' : 'Inactive' ]]"></oj-bind-text>
+                            </span>
+                          </td>
+                        </tr>
+                      </template>
+                    </oj-bind-for-each>
+                  </tbody>
+                </table>
+                <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px 16px; border-radius:8px; border:1px solid #e2e8f0;">
+                  <div style="font-size:14px;">
+                    <strong>Total BASE Weight: </strong>
+                    <span :style="[[ $variables.totalBaseWeight === 100 ? 'color:#15803d;font-weight:bold;' : 'color:#b91c1c;font-weight:bold;' ]]">
+                      <oj-bind-text value="[[ '' + $variables.totalBaseWeight ]]"></oj-bind-text> / 100
+                    </span>
+                  </div>
+                  <button type="button" class="sp-btn success"
+                          :disabled="[[ $variables.ruleUpdateBusy || $variables.totalBaseWeight !== 100 ]]"
+                          on-click="[[ $listeners.onSaveAllRules ]]">
+                    <oj-bind-if test="[[ !$variables.ruleUpdateBusy ]]">Save All Weights</oj-bind-if>
+                    <oj-bind-if test="[[ $variables.ruleUpdateBusy ]]">Saving…</oj-bind-if>
+                  </button>
+                </div>
+              </oj-bind-if>
+              <oj-bind-if test="[[ $variables.riskRules.length === 0 && !$variables.adminConfigLoading ]]">
+                <div class="sp-empty-box">No risk rules found.</div>
+              </oj-bind-if>
+
+              <oj-bind-if test="[[ $variables.ruleUpdateMessage ]]">
+                <div :class="[[ $variables.ruleUpdateMessage.indexOf('Error') === -1 ? 'sp-val-result val-ok' : 'sp-val-result val-fail' ]]" style="margin-top:12px;">
+                  <oj-bind-text value="[[ $variables.ruleUpdateMessage ]]"></oj-bind-text>
+                </div>
+              </oj-bind-if>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── PANEL 1B: Risk Score Bands ── -->
+            <div class="sp-section-inner">
+              <h3 style="text-transform:uppercase;color:#475569;font-size:13px;letter-spacing:1px;margin-bottom:12px;">Risk Score Bands</h3>
+              <p class="sp-muted" style="margin-bottom:16px;">
+                Define the minimum and maximum scores for each risk level. The ranges must perfectly cover 0 to 100 with no gaps or overlaps.
+              </p>
+
+              <oj-bind-if test="[[ $variables.riskBands.length > 0 ]]">
+                <table style="width:100%; border-collapse:collapse; margin-bottom:16px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                  <thead>
+                    <tr style="background:#f1f5f9; border-bottom:2px solid #e2e8f0;">
+                      <th style="padding:10px 12px;text-align:left;font-weight:600;color:#475569;font-size:12px;">RISK LEVEL</th>
+                      <th style="padding:10px 12px;text-align:center;font-weight:600;color:#475569;font-size:12px;">MIN SCORE</th>
+                      <th style="padding:10px 12px;text-align:center;font-weight:600;color:#475569;font-size:12px;">MAX SCORE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <oj-bind-for-each data="[[ $variables.riskBands ]]" as="band">
+                      <template>
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                          <td style="padding:8px 12px;font-weight:500;">
+                            <span :class="[[ $functions.getRiskBadgeClass(band.data.risk_level) ]]">
+                              <oj-bind-text value="[[ band.data.risk_level ]]"></oj-bind-text>
+                            </span>
+                          </td>
+                          <td style="padding:8px 12px;text-align:center;">
+                            <oj-input-number min="0" max="100"
+                                   value="{{ $variables.riskBands[band.index].min_score }}"
+                                   on-value-changed="[[ $listeners.onBandScoreChange ]]"
+                                   style="width:80px;text-align:center;"></oj-input-number>
+                          </td>
+                          <td style="padding:8px 12px;text-align:center;">
+                            <oj-input-number min="0" max="100"
+                                   value="{{ $variables.riskBands[band.index].max_score }}"
+                                   on-value-changed="[[ $listeners.onBandScoreChange ]]"
+                                   style="width:80px;text-align:center;"></oj-input-number>
+                          </td>
+                        </tr>
+                      </template>
+                    </oj-bind-for-each>
+                  </tbody>
+                </table>
+                <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px 16px; border-radius:8px; border:1px solid #e2e8f0;">
+                  <div style="font-size:14px;">
+                    <oj-bind-if test="[[ $variables.totalBandsValid ]]">
+                      <span style="color:#15803d;font-weight:bold;">✔ Bands are continuous (0-100)</span>
+                    </oj-bind-if>
+                    <oj-bind-if test="[[ !$variables.totalBandsValid ]]">
+                      <span style="color:#b91c1c;font-weight:bold;">⚠ Bands must continuously cover 0 to 100 with no overlaps</span>
+                    </oj-bind-if>
+                  </div>
+                  <button type="button" class="sp-btn success"
+                          :disabled="[[ $variables.bandUpdateBusy || !$variables.totalBandsValid ]]"
+                          on-click="[[ $listeners.onSaveAllBands ]]">
+                    <oj-bind-if test="[[ !$variables.bandUpdateBusy ]]">Save All Bands</oj-bind-if>
+                    <oj-bind-if test="[[ $variables.bandUpdateBusy ]]">Saving…</oj-bind-if>
+                  </button>
+                </div>
+              </oj-bind-if>
+
+              <oj-bind-if test="[[ $variables.bandUpdateMessage ]]">
+                <div :class="[[ $variables.bandUpdateMessage.indexOf('Error') === -1 ? 'sp-val-result val-ok' : 'sp-val-result val-fail' ]]" style="margin-top:12px;">
+                  <oj-bind-text value="[[ $variables.bandUpdateMessage ]]"></oj-bind-text>
+                </div>
+              </oj-bind-if>
+            </div>
+
+            <hr class="sp-divider"/>
+
+            <!-- ── PANEL 2: High-Risk Countries ── -->
+            <div class="sp-section-inner">
+              <h3>High-Risk Countries</h3>
+              <p class="sp-muted" style="margin-bottom:12px;">
+                Suppliers from these countries receive a risk premium during assessment.
+                Use ISO alpha-2 codes (e.g. IR, KP, RU, SY).
+              </p>
+
+              <!-- Add new country form -->
+              <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;padding:14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+                <div>
+                  <label class="field-label">Country Code *</label>
+                  <input type="text" maxlength="2"
+                         :value="[[ $variables.newCountryCode ]]"
+                         on-input="[[ $listeners.onNewCountryCodeInput ]]"
+                         placeholder="e.g. IR"
+                         style="width:80px;border:1px solid #cbd5e1;border-radius:6px;padding:7px 9px;font-size:13px;text-transform:uppercase;"/>
+                </div>
+                <div style="flex:1;min-width:160px;">
+                  <label class="field-label">Reason</label>
+                  <input type="text"
+                         :value="[[ $variables.newCountryReason ]]"
+                         on-input="[[ $listeners.onNewCountryReasonInput ]]"
+                         placeholder="e.g. FATF grey list"
+                         style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 9px;font-size:13px;"/>
+                </div>
+                <div style="flex:1;min-width:120px;">
+                  <label class="field-label">Source</label>
+                  <input type="text"
+                         :value="[[ $variables.newCountrySource ]]"
+                         on-input="[[ $listeners.onNewCountrySourceInput ]]"
+                         placeholder="e.g. FATF 2024"
+                         style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 9px;font-size:13px;"/>
+                </div>
+                <div>
+                  <button type="button" class="sp-btn success"
+                          :disabled="[[ !$variables.newCountryCode || $variables.countryUpdateBusy ]]"
+                          on-click="[[ $listeners.onAddHighRiskCountry ]]">
+                    + Add Country
+                  </button>
+                </div>
+              </div>
+
+              <oj-bind-if test="[[ $variables.countryUpdateMessage ]]">
+                <div :class="[[ $variables.countryUpdateMessage.indexOf('Error') === -1 ? 'sp-val-result val-ok' : 'sp-val-result val-fail' ]]" style="margin-bottom:10px;">
+                  <oj-bind-text value="[[ $variables.countryUpdateMessage ]]"></oj-bind-text>
+                </div>
+              </oj-bind-if>
+
+              <oj-bind-if test="[[ $variables.highRiskCountries.length > 0 ]]">
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                  <thead>
+                    <tr style="background:#f1f5f9;text-align:left;">
+                      <th style="padding:8px 12px;">Code</th>
+                      <th style="padding:8px 12px;">Reason</th>
+                      <th style="padding:8px 12px;">Source</th>
+                      <th style="padding:8px 12px;">Effective</th>
+                      <th style="padding:8px 12px;">Status</th>
+                      <th style="padding:8px 12px;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <oj-bind-for-each data="[[ $variables.highRiskCountries ]]">
+                      <template data-oj-as="c">
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                          <td style="padding:8px 12px;"><strong><oj-bind-text value="[[ c.data.country_code ]]"></oj-bind-text></strong></td>
+                          <td style="padding:8px 12px;"><oj-bind-text value="[[ c.data.reason || '—' ]]"></oj-bind-text></td>
+                          <td style="padding:8px 12px;"><oj-bind-text value="[[ c.data.source_name || '—' ]]"></oj-bind-text></td>
+                          <td style="padding:8px 12px;"><oj-bind-text value="[[ $functions.formatDate(c.data.effective_date) || '—' ]]"></oj-bind-text></td>
+                          <td style="padding:8px 12px;">
+                            <span :class="[[ c.data.active === 'Y' ? 'sp-pill high' : 'sp-pill neutral' ]]">
+                              <oj-bind-text value="[[ c.data.active === 'Y' ? '⚠ High-Risk' : 'Inactive' ]]"></oj-bind-text>
+                            </span>
+                          </td>
+                          <td style="padding:8px 12px;">
+                            <oj-bind-if test="[[ c.data.active === 'Y' ]]">
+                              <button type="button" class="sp-btn"
+                                      :data-country-code="[[ c.data.country_code ]]"
+                                      :disabled="[[ $variables.countryUpdateBusy ]]"
+                                      on-click="[[ $listeners.onDeactivateCountry ]]">
+                                Remove
+                              </button>
+                            </oj-bind-if>
+                            <oj-bind-if test="[[ c.data.active !== 'Y' ]]">
+                              <button type="button" class="sp-btn success"
+                                      :data-country-code="[[ c.data.country_code ]]"
+                                      :disabled="[[ $variables.countryUpdateBusy ]]"
+                                      on-click="[[ $listeners.onReactivateCountry ]]">
+                                Re-activate
+                              </button>
+                            </oj-bind-if>
+                          </td>
+                        </tr>
+                      </template>
+                    </oj-bind-for-each>
+                  </tbody>
+                </table>
+              </oj-bind-if>
+              <oj-bind-if test="[[ $variables.highRiskCountries.length === 0 && !$variables.adminConfigLoading ]]">
+                <div class="sp-empty-box">No high-risk countries configured.</div>
+              </oj-bind-if>
+            </div>
+
+          </oj-bind-if>
+        </section>
+      </oj-bind-if>
+
+    </main>
+  </div>
+</div>

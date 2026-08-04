@@ -1,0 +1,15 @@
+{
+    "backends": {
+        "ERP_API": {
+            "servers": [
+                {
+                    "url": "http://172.105.152.7:8181/ords/ha_erp_api/ha_v1",
+                    "description": "Default Server",
+                    "x-vb": {
+                        "profiles": []
+                    }
+                }
+            ]
+        }
+      }
+}

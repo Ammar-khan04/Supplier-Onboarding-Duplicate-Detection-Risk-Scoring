@@ -83,6 +83,13 @@ create or replace package supplier_config_pkg as
     p_reason in varchar2 default null,
     p_source in varchar2 default null
   );
+
+  procedure update_risk_score_band(
+    p_actor_subject_id in varchar2,
+    p_risk_level in varchar2,
+    p_min_score in number,
+    p_max_score in number
+  );
 end supplier_config_pkg;
 /
 
@@ -241,7 +248,15 @@ create or replace package supplier_request_pkg as
     p_file_name in varchar2,
     p_mime_type in varchar2 default null,
     p_document_content in blob default null,
+    p_document_content_base64 in clob default null,
     p_document_id out number
+  );
+
+  procedure delete_document(
+    p_actor_subject_id in varchar2,
+    p_actor_roles in varchar2,
+    p_request_id in number,
+    p_document_id in number
   );
 end supplier_request_pkg;
 /
