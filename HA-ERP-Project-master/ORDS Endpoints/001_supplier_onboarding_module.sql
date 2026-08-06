@@ -280,12 +280,12 @@ begin
       p_module_name => 'ha_supplier_onboarding_v1',
       p_pattern     => 'requests/:request_id/documents'
    );
-   ords.define_handler(
-      p_module_name => 'ha_supplier_onboarding_v1',
-      p_pattern     => 'requests/:request_id/documents',
-      p_method      => 'GET',
-      p_source_type => ords.source_type_collection_feed,
-      p_source      => q'[
+    ords.define_handler(
+    p_module_name => 'ha_supplier_onboarding_v1',
+    p_pattern     => 'requests/:request_id/documents',
+    p_method      => 'GET',
+    p_source_type => ords.source_type_collection_feed,
+    p_source      => q'[
       select
         document_id,
         request_id,
@@ -302,62 +302,70 @@ begin
         and is_latest = 'Y'
       order by uploaded_at desc
     ]'
-   );
+  );
+  
    ords.define_handler(
-      p_module_name => 'ha_supplier_onboarding_v1',
-      p_pattern     => 'requests/:request_id/documents',
-      p_method      => 'POST',
-      p_source_type => ords.source_type_plsql,
-      p_source      => q'[
-      declare
-        l_document_id number;
-        l_b64 clob;
-        l_doc_type varchar2(100);
-        l_file_name varchar2(255);
-        l_mime_type varchar2(100);
-      begin
-        begin
-          if :body_text is not null then
-            l_b64 := json_value(:body_text, '$.document_content_base64' returning clob);
-            l_doc_type := json_value(:body_text, '$.document_type');
-            l_file_name := json_value(:body_text, '$.file_name');
-            l_mime_type := json_value(:body_text, '$.mime_type');
-          end if;
-        exception
-          when others then
-            null;
-        end;
-
-        if l_b64 is null then
-          l_b64 := :document_content_base64;
-        end if;
-        if l_doc_type is null then
-          l_doc_type := :document_type;
-        end if;
-        if l_file_name is null then
-          l_file_name := :file_name;
-        end if;
-        if l_mime_type is null then
-          l_mime_type := :mime_type;
-        end if;
-
-        supplier_request_pkg.add_document(
-          p_actor_subject_id => coalesce(:actor_subject_id, 'REQ_AMINA_SUB'),
-          p_actor_roles => coalesce(:actor_roles, 'REQUESTER'),
-          p_request_id => to_number(:request_id),
-          p_document_type => l_doc_type,
-          p_file_name => l_file_name,
-          p_mime_type => l_mime_type,
-          p_document_content => null,
-          p_document_content_base64 => l_b64,
-          p_document_id => l_document_id
-        );
-        :status_code := 201;
-        owa_util.mime_header('application/json', true);
-        htp.p('{"document_id":' || to_char(l_document_id) || '}');
-      end;
-    ]'
-   );
+     p_module_name => 'ha_supplier_onboarding_v1',
+     p_pattern     => 'requests/:request_id/documents',
+     p_method      => 'POST',
+     p_source_type => ords.source_type_plsql,
+     p_source      => q'[
+     declare
+       l_body        clob;
+       l_document_id number;
+       l_b64         clob;
+       l_doc_type    varchar2(100);
+       l_file_name   varchar2(255);
+       l_mime_type   varchar2(100);
+     begin
+       l_body := :body_text;
+       begin
+         if l_body is not null and dbms_lob.getlength(l_body) > 0 then
+           l_b64 := json_value(l_body, '$.document_content_base64' returning clob);
+           l_doc_type := json_value(l_body, '$.document_type');
+           l_file_name := json_value(l_body, '$.file_name');
+           l_mime_type := json_value(l_body, '$.mime_type');
+         end if;
+       exception
+         when others then
+           null;
+       end;
+       if l_b64 is null then
+         l_b64 := :document_content_base64;
+       end if;
+       if l_doc_type is null then
+         l_doc_type := :document_type;
+       end if;
+       if l_file_name is null then
+         l_file_name := :file_name;
+       end if;
+       if l_mime_type is null then
+         l_mime_type := :mime_type;
+       end if;
+       supplier_request_pkg.add_document(
+         p_actor_subject_id => coalesce(:actor_subject_id, 'REQ_AMINA_SUB'),
+         p_actor_roles => coalesce(:actor_roles, 'REQUESTER'),
+         p_request_id => to_number(:request_id),
+         p_document_type => l_doc_type,
+         p_file_name => l_file_name,
+         p_mime_type => l_mime_type,
+         p_document_content => null,
+         p_document_content_base64 => l_b64,
+         p_document_id => l_document_id
+       );
+       commit;
+       :status_code := 201;
+       owa_util.mime_header('application/json', true);
+       htp.p('{"document_id":' || to_char(l_document_id) || '}');
+     exception
+       when others then
+         rollback;
+         :status_code := 400;
+         owa_util.mime_header('application/json', true);
+         htp.p('{"error": "' || replace(replace(sqlerrm, '"', '\"'), chr(10), ' ') || '"}');
+     end;
+   ]'
+  );
 
    ords.define_template(
       p_module_name => 'ha_supplier_onboarding_v1',
@@ -598,33 +606,71 @@ begin
       p_pattern     => 'integration-jobs/:job_id/result'
    );
    ords.define_handler(
-      p_module_name => 'ha_supplier_onboarding_v1',
-      p_pattern     => 'integration-jobs/:job_id/result',
-      p_method      => 'PUT',
-      p_source_type => ords.source_type_plsql,
-      p_source      => q'[
+    p_module_name => 'ha_supplier_onboarding_v1',
+    p_pattern     => 'integration-jobs/:job_id/result',
+    p_method      => 'PUT',
+    p_source_type => ords.source_type_plsql,
+    p_source      => q'[
+      declare
+        l_body                    clob;
+        l_job_status              varchar2(100);
+        l_response_reference      varchar2(4000);
+        l_error_type              varchar2(255);
+        l_error_message           varchar2(4000);
+        l_retryable               varchar2(10);
+        l_fusion_supplier_id      varchar2(255);
+        l_fusion_supplier_number  varchar2(255);
+        l_ai_summary              clob;
+        l_ai_recommended_actions  clob;
+        l_justification_quality   varchar2(100);
+        l_model_name              varchar2(255);
       begin
+        l_body := :body_text;
+        if l_body is not null then
+          begin
+            l_job_status             := coalesce(json_value(l_body, '$.job_status'), json_value(l_body, '$.status'));
+            l_response_reference     := json_value(l_body, '$.response_reference');
+            l_error_type             := json_value(l_body, '$.error_type');
+            l_error_message          := json_value(l_body, '$.error_message');
+            l_retryable              := json_value(l_body, '$.retryable');
+            l_fusion_supplier_id     := to_char(json_value(l_body, '$.fusion_supplier_id'));
+            l_fusion_supplier_number := to_char(json_value(l_body, '$.fusion_supplier_number'));
+            l_ai_summary             := json_value(l_body, '$.ai_summary' returning clob);
+            l_ai_recommended_actions := json_value(l_body, '$.ai_recommended_actions' returning clob);
+            l_justification_quality  := json_value(l_body, '$.justification_quality');
+            l_model_name             := json_value(l_body, '$.model_name');
+          exception
+            when others then
+              null;
+          end;
+        end if;
         supplier_integration_pkg.complete_job(
-          p_job_id => to_number(:job_id),
-          p_status => :job_status,
-          p_response_reference => :response_reference,
-          p_error_type => :error_type,
-          p_error_message => :error_message,
-          p_retryable => coalesce(:retryable, 'N'),
-          p_fusion_supplier_id => :fusion_supplier_id,
-          p_fusion_supplier_number => :fusion_supplier_number,
-          p_ai_summary => :ai_summary,
-          p_ai_recommended_actions => :ai_recommended_actions,
-          p_justification_quality => coalesce(:justification_quality, 'UNKNOWN'),
-          p_model_name => :model_name
+          p_job_id                 => to_number(:job_id),
+          p_status                 => l_job_status,
+          p_response_reference     => l_response_reference,
+          p_error_type             => l_error_type,
+          p_error_message          => l_error_message,
+          p_retryable              => l_retryable,
+          p_fusion_supplier_id     => l_fusion_supplier_id,
+          p_fusion_supplier_number => l_fusion_supplier_number,
+          p_ai_summary             => l_ai_summary,
+          p_ai_recommended_actions => l_ai_recommended_actions,
+          p_justification_quality  => l_justification_quality,
+          p_model_name             => l_model_name
         );
+        commit;
+        :status_code := 200;
         owa_util.mime_header('application/json', true);
-        htp.p('{
-  "status": "recorded"
-}');
+        htp.p('{"status": "recorded"}');
+      exception
+        when others then
+          rollback;
+          :status_code := 400;
+          owa_util.mime_header('application/json', true);
+          htp.p('{"error": "' || replace(replace(sqlerrm, '"', '\"'), chr(10), ' ') || '"}');
       end;
     ]'
-   );
+  );
 
    ords.define_template(
       p_module_name => 'ha_supplier_onboarding_v1',

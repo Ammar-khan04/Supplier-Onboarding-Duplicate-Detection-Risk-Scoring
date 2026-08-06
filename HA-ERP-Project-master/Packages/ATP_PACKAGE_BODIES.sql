@@ -55,7 +55,6 @@ create or replace package body supplier_auth_pkg as
 end supplier_auth_pkg;
 /
 
-/
 create or replace package body supplier_config_pkg as
   function get_number_value(
     p_config_type in varchar2,
@@ -334,7 +333,6 @@ create or replace package body supplier_config_pkg as
 end supplier_config_pkg;
 /
 
-/
 create or replace package body supplier_dashboard_pkg as
   procedure open_requests(
     p_actor_subject_id in varchar2,
@@ -368,7 +366,6 @@ create or replace package body supplier_dashboard_pkg as
 end supplier_dashboard_pkg;
 /
 
-/
 create or replace package body supplier_integration_pkg as
   procedure create_job(
     p_request_id in number,
@@ -475,24 +472,31 @@ create or replace package body supplier_integration_pkg as
   end retry_latest_failed_request_job;
 
   procedure claim_job(
-    p_job_id in number,
-    p_oic_instance_id in varchar2,
-    p_correlation_id in varchar2 default null
+      p_job_id in number,
+      p_oic_instance_id in varchar2,
+      p_correlation_id in varchar2 default null
   ) is
   begin
-    update integration_job
-       set status = 'CLAIMED',
-           oic_instance_id = p_oic_instance_id,
-           correlation_id = p_correlation_id,
-           claimed_at = systimestamp,
-           started_at = systimestamp,
-           updated_at = systimestamp
-     where job_id = p_job_id
-       and status = 'READY';
+      -- 1. Guard clause: Ensure job_id is explicitly provided
+      if p_job_id is null then
+          raise_application_error(-20063, 'p_job_id cannot be NULL when claiming a job.');
+      end if;
 
-    if sql%rowcount = 0 then
-      raise_application_error(-20062, 'Integration job is not ready to claim');
-    end if;
+      -- 2. Update only the specified job record
+      update integration_job
+        set status          = 'CLAIMED',
+            oic_instance_id = p_oic_instance_id,
+            correlation_id  = p_correlation_id,
+            claimed_at      = systimestamp,
+            started_at      = systimestamp,
+            updated_at      = systimestamp
+      where job_id = p_job_id
+        and status = 'READY';
+
+      -- 3. Raise exception if no matching row was updated
+      if sql%rowcount = 0 then
+          raise_application_error(-20062, 'Integration job ' || p_job_id || ' is not in READY status or does not exist.');
+      end if;
   end claim_job;
 
   procedure complete_job(
@@ -504,8 +508,8 @@ create or replace package body supplier_integration_pkg as
     p_retryable in varchar2 default 'N',
     p_fusion_supplier_id in varchar2 default null,
     p_fusion_supplier_number in varchar2 default null,
-    p_ai_summary in varchar2 default null,
-    p_ai_recommended_actions in varchar2 default null,
+    p_ai_summary in clob default null,
+    p_ai_recommended_actions in clob default null,
     p_justification_quality in varchar2 default 'UNKNOWN',
     p_model_name in varchar2 default null
   ) is
@@ -566,7 +570,11 @@ create or replace package body supplier_integration_pkg as
         l_job.request_id,
         l_request_version,
         'Y',
-        coalesce(p_ai_summary, p_error_message, 'AI explanation job completed without summary text.'),
+        case
+          when p_ai_summary is not null then p_ai_summary
+          when p_error_message is not null then to_clob(p_error_message)
+          else to_clob('AI explanation job completed without summary text.')
+        end,
         p_ai_recommended_actions,
         l_quality,
         p_model_name,
@@ -599,34 +607,37 @@ create or replace package body supplier_integration_pkg as
                updated_at = systimestamp
          where request_id = l_job.request_id;
 
-        supplier_workflow_pkg.transition_request(
-          p_request_id => l_job.request_id,
-          p_to_status => 'CREATED_IN_FUSION',
-          p_action => 'FUSION_CREATE_SUCCEEDED',
-          p_actor_subject_id => 'OIC_SERVICE',
-          p_reason => 'Fusion supplier number returned',
-          p_existing_supplier_id => p_fusion_supplier_id
-        );
-      elsif l_status = 'FAILED' and l_request_status = 'SUBMITTED_TO_FUSION' then
+        if l_request_status != 'CREATED_IN_FUSION' then
+          supplier_workflow_pkg.transition_request(
+            p_request_id => l_job.request_id,
+            p_to_status => 'CREATED_IN_FUSION',
+            p_action => 'FUSION_CREATE_SUCCEEDED',
+            p_actor_subject_id => 'OIC_SERVICE',
+            p_reason => 'Fusion supplier number returned',
+            p_existing_supplier_id => p_fusion_supplier_id
+          );
+        end if;
+      elsif l_status = 'FAILED' then
         update supplier_request
            set fusion_create_error = p_error_message,
                updated_at = systimestamp
          where request_id = l_job.request_id;
 
-        supplier_workflow_pkg.transition_request(
-          p_request_id => l_job.request_id,
-          p_to_status => 'INTEGRATION_FAILED',
-          p_action => 'FUSION_CREATE_FAILED',
-          p_actor_subject_id => 'OIC_SERVICE',
-          p_reason => p_error_message
-        );
+        if l_request_status != 'INTEGRATION_FAILED' then
+          supplier_workflow_pkg.transition_request(
+            p_request_id => l_job.request_id,
+            p_to_status => 'INTEGRATION_FAILED',
+            p_action => 'FUSION_CREATE_FAILED',
+            p_actor_subject_id => 'OIC_SERVICE',
+            p_reason => p_error_message
+          );
+        end if;
       end if;
     end if;
   end complete_job;
 end supplier_integration_pkg;
 /
 
-/
 create or replace package body supplier_projection_pkg as
   function normalize_text(p_value in varchar2) return varchar2 is
   begin
@@ -727,7 +738,6 @@ create or replace package body supplier_projection_pkg as
 end supplier_projection_pkg;
 /
 
-/
 create or replace package body supplier_request_pkg as
   procedure create_request(
     p_actor_subject_id in varchar2,
@@ -1192,7 +1202,6 @@ create or replace package body supplier_request_pkg as
 end supplier_request_pkg;
 /
 
-/
 create or replace package body supplier_review_pkg as
   procedure decide_request(
     p_actor_subject_id in varchar2,
@@ -1343,8 +1352,6 @@ create or replace package body supplier_review_pkg as
       raise_application_error(-20055, 'Latest request assessment was not found for justification-risk adjustment');
   end apply_justification_risk_adjustment;
 end supplier_review_pkg;
-/
-
 /
 
 create or replace package body supplier_validation_pkg as
@@ -1887,10 +1894,8 @@ create or replace package body supplier_validation_pkg as
      where request_id = p_request_id;
   end assess_request;
 end supplier_validation_pkg;
-
 /
 
-/
 create or replace package body supplier_workflow_pkg as
   function can_transition(
     p_from_status in varchar2,
@@ -1916,9 +1921,11 @@ create or replace package body supplier_workflow_pkg as
       'UNDER_REVIEW>DUPLICATE',
       'UNDER_REVIEW>APPROVED',
       'APPROVED>SUBMITTED_TO_FUSION',
+      'APPROVED>CREATED_IN_FUSION',
       'SUBMITTED_TO_FUSION>CREATED_IN_FUSION',
       'SUBMITTED_TO_FUSION>INTEGRATION_FAILED',
-      'INTEGRATION_FAILED>SUBMITTED_TO_FUSION'
+      'INTEGRATION_FAILED>SUBMITTED_TO_FUSION',
+      'INTEGRATION_FAILED>CREATED_IN_FUSION'
     ) then
       return 'Y';
     end if;
@@ -1999,6 +2006,4 @@ create or replace package body supplier_workflow_pkg as
     );
   end transition_request;
 end supplier_workflow_pkg;
-/
-
 /

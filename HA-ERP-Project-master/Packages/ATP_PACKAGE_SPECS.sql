@@ -1,19 +1,5 @@
--- SELECT object_name, object_type, status 
--- FROM user_objects 
--- WHERE status = 'INVALID';
-
-SET SERVEROUTPUT ON;
-DECLARE
-    l_role_check VARCHAR2(10);
-BEGIN
-    -- Test if supplier_auth_pkg is working
-    l_role_check := supplier_auth_pkg.has_role('REQUESTER', 'REVIEWER');
-    DBMS_OUTPUT.PUT_LINE('Package Test Result: ' || l_role_check);
-END;
-/
-
 set define off
-whenever sqlerror exit sql.sqlcode
+whenever sqlerror continue
 
 create or replace package supplier_auth_pkg as
   function has_role(
@@ -33,8 +19,7 @@ create or replace package supplier_auth_pkg as
   );
 end supplier_auth_pkg;
 /
-  
-/
+
 create or replace package supplier_config_pkg as
   function get_number_value(
     p_config_type in varchar2,
@@ -93,7 +78,6 @@ create or replace package supplier_config_pkg as
 end supplier_config_pkg;
 /
 
-/
 create or replace package supplier_dashboard_pkg as
   procedure open_requests(
     p_actor_subject_id in varchar2,
@@ -108,7 +92,6 @@ create or replace package supplier_dashboard_pkg as
 end supplier_dashboard_pkg;
 /
 
-/
 create or replace package supplier_integration_pkg as
   procedure create_job(
     p_request_id in number,
@@ -146,15 +129,14 @@ create or replace package supplier_integration_pkg as
     p_retryable in varchar2 default 'N',
     p_fusion_supplier_id in varchar2 default null,
     p_fusion_supplier_number in varchar2 default null,
-    p_ai_summary in varchar2 default null,
-    p_ai_recommended_actions in varchar2 default null,
+    p_ai_summary in clob default null,
+    p_ai_recommended_actions in clob default null,
     p_justification_quality in varchar2 default 'UNKNOWN',
     p_model_name in varchar2 default null
   );
 end supplier_integration_pkg;
 /
 
-/
 create or replace package supplier_projection_pkg as
   function normalize_text(p_value in varchar2) return varchar2;
   function fingerprint(p_value in varchar2) return varchar2;
@@ -169,7 +151,6 @@ create or replace package supplier_projection_pkg as
 end supplier_projection_pkg;
 /
 
-/
 create or replace package supplier_request_pkg as
   procedure create_request(
     p_actor_subject_id in varchar2,
@@ -261,7 +242,6 @@ create or replace package supplier_request_pkg as
 end supplier_request_pkg;
 /
 
-/
 create or replace package supplier_review_pkg as
   procedure decide_request(
     p_actor_subject_id in varchar2,
@@ -282,7 +262,6 @@ create or replace package supplier_review_pkg as
 end supplier_review_pkg;
 /
 
-/
 create or replace package supplier_validation_pkg as
   procedure assess_request(
     p_request_id in number,
@@ -292,7 +271,6 @@ create or replace package supplier_validation_pkg as
 end supplier_validation_pkg;
 /
 
-/
 create or replace package supplier_workflow_pkg as
   function can_transition(
     p_from_status in varchar2,
@@ -318,6 +296,4 @@ create or replace package supplier_workflow_pkg as
     p_existing_supplier_id in varchar2 default null
   );
 end supplier_workflow_pkg;
-/
-
 /
