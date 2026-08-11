@@ -616,6 +616,45 @@ begin
 
    ords.define_template(
       p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'integration-jobs/sync-log'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'integration-jobs/sync-log',
+      p_method      => 'POST',
+      p_source_type => ords.source_type_plsql,
+      p_source      => q'[
+      declare
+        l_job_id number;
+      begin
+        supplier_integration_pkg.create_job(
+          p_request_id => null,
+          p_integration_type => 'SUPPLIER_SYNC',
+          p_payload_reference => coalesce(:payload_reference, 'Scheduled Sync ' || to_char(sysdate, 'YYYY-MM-DD HH24:MI:SS')),
+          p_job_id => l_job_id
+        );
+        
+        supplier_integration_pkg.claim_job(
+          p_job_id => l_job_id,
+          p_oic_instance_id => coalesce(:oic_instance_id, 'UNKNOWN'),
+          p_correlation_id => null
+        );
+        
+        supplier_integration_pkg.complete_job(
+          p_job_id => l_job_id,
+          p_status => coalesce(:status, 'SUCCEEDED'),
+          p_error_type => :error_type,
+          p_error_message => :error_message,
+          p_retryable => 'N'
+        );
+        
+        :status_code := 201;
+      end;
+    ]'
+   );
+
+   ords.define_template(
+      p_module_name => 'ha_supplier_onboarding_v1',
       p_pattern     => 'integration-jobs/:job_id/claim'
    );
    ords.define_handler(
