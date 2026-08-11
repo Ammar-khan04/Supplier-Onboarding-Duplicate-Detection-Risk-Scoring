@@ -396,6 +396,25 @@ define([], function() {
    * Returns a CSS class for the integration log status pill.
    */
   // Bug 3 fix: DB integration_job.status values are READY/CLAIMED/IN_PROGRESS/SUCCEEDED/FAILED/CANCELLED
+
+  PageModule.prototype.getRequestStatusClass = function(status) {
+    if (!status) return 'sp-pill neutral';
+    switch (status.toUpperCase()) {
+      case 'DRAFT': return 'sp-pill neutral';
+      case 'SUBMITTED': return 'sp-pill neutral';
+      case 'UNDER_REVIEW': return 'sp-pill medium';
+      case 'APPROVED': return 'sp-pill low';
+      case 'REJECTED': return 'sp-pill high';
+      case 'CORRECTION_REQUIRED': return 'sp-pill high';
+      case 'SUBMITTED_TO_FUSION': return 'sp-pill neutral';
+      case 'CREATED_IN_FUSION': return 'sp-pill low';
+      case 'INTEGRATION_FAILED': return 'sp-pill high';
+      case 'VALIDATION_FAILED': return 'sp-pill high';
+      case 'DUPLICATE': return 'sp-pill high';
+      default: return 'sp-pill neutral';
+    }
+  };
+
   PageModule.prototype.getLogStatusClass = function(status) {
     if (!status) return 'sp-pill neutral';
     switch (status.toUpperCase()) {
@@ -413,6 +432,16 @@ define([], function() {
    * Returns a human-readable label for an integration type.
    */
   // Bug 4 fix: real integration_type values are AI_EXPLANATION, FUSION_CREATE, SUPPLIER_SYNC
+
+  PageModule.prototype.getIntegrationTypeClass = function(type) {
+    if (!type) return 'sp-pill neutral';
+    var t = type.toUpperCase();
+    if (t === 'AI_EXPLANATION') return 'sp-pill medium';
+    if (t === 'FUSION_CREATE')  return 'sp-pill low';
+    if (t === 'SUPPLIER_SYNC')  return 'sp-pill neutral';
+    return 'sp-pill neutral';
+  };
+
   PageModule.prototype.formatIntegrationType = function(type) {
     if (!type) return '—';
     var map = {
@@ -473,11 +502,13 @@ define([], function() {
   PageModule.prototype.getActionTypeBadgeClass = function(actionType) {
     if (!actionType) return 'sp-pill neutral';
     var t = actionType.toUpperCase();
-    if (t === 'APPROVED' || t === 'CREATED_IN_FUSION') return 'sp-pill low';
-    if (t === 'REJECTED' || t === 'DUPLICATE')         return 'sp-pill high';
+    if (t === 'APPROVED' || t === 'CREATED_IN_FUSION' || t === 'VALIDATION_PASSED') return 'sp-pill low';
+    if (t === 'REJECTED' || t === 'DUPLICATE' || t === 'VALIDATION_FAILED')         return 'sp-pill high';
     if (t === 'SUBMITTED' || t === 'SUBMIT')           return 'sp-pill medium';
     if (t.indexOf('CORRECTION') !== -1)                return 'sp-pill medium';
     if (t.indexOf('REVIEW') !== -1)                    return 'sp-pill medium';
+    if (t.indexOf('FAILED') !== -1)                    return 'sp-pill high';
+    if (t.indexOf('RISK_ASSESSED') !== -1)             return 'sp-pill medium';
     return 'sp-pill neutral';
   };
 

@@ -154,6 +154,15 @@
 
           <!-- FILTERS ROW -->
           <div class="sp-filters">
+            <div style="flex: 0 0 200px;">
+              <label class="field-label">Search</label>
+              <oj-input-text value="{{ $variables.filterSearchTerm }}"
+                             on-value-changed="[[ $listeners.onSearchTermChange ]]"
+                             placeholder="Name or Request #..."
+                             clear-icon="always"
+                             style="width:100%;">
+              </oj-input-text>
+            </div>
             <div>
               <label class="field-label">Business Unit</label>
               <select on-change="[[ $listeners.onFilterBusinessUnitChange ]]">
@@ -207,15 +216,15 @@
 
           <!-- OJET TABLE -->
           <div class="sp-table-wrap">
-            <oj-table id="dashboard-table"
+            <oj-table id="dashboard-table" on-oj-sort="[[ $listeners.onDashboardSort ]]"
                       data="[[ $variables.filteredRequestsADP ]]"
                       columns='[
-                        {"headerText": "Request / Supplier", "template": "supplierTemplate"},
-                        {"headerText": "Status", "template": "statusTemplate"},
-                        {"headerText": "Risk", "template": "riskTemplate"},
-                        {"headerText": "Duplicate", "template": "duplicateTemplate"},
-                        {"headerText": "Fusion Result", "field": "fusion_supplier_number"},
-                        {"headerText": "Actions", "template": "actionTemplate"}
+                        {"headerText": "Request / Supplier", "field": "supplier_name", "sortable": "enabled", "template": "supplierTemplate", "width": "300px"},
+                        {"headerText": "Status", "field": "status", "sortable": "enabled", "template": "statusTemplate"},
+                        {"headerText": "Risk", "field": "risk_level", "sortable": "enabled", "template": "riskTemplate"},
+                        {"headerText": "Duplicate", "field": "duplicate_level", "sortable": "enabled", "template": "duplicateTemplate"},
+                        {"headerText": "Fusion Result", "field": "fusion_supplier_number", "sortable": "enabled"},
+                        {"headerText": "Actions", "sortable": "disabled", "template": "actionTemplate"}
                       ]'
                       style="width: 100%;">
 
@@ -225,7 +234,7 @@
               </template>
 
               <template slot="statusTemplate" data-oj-as="cell">
-                <span class="sp-pill neutral"><oj-bind-text value="[[ cell.row.status ]]"></oj-bind-text></span>
+                <span :class="[[ $functions.getRequestStatusClass(cell.row.status) ]]"><oj-bind-text value="[[ cell.row.status ]]"></oj-bind-text></span>
               </template>
 
               <template slot="riskTemplate" data-oj-as="cell">
@@ -245,7 +254,18 @@
                 </oj-bind-if>
               </template>
 
+
             </oj-table>
+            
+            <!-- Dashboard Pagination -->
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 16px;">
+              <span class="sp-muted" style="font-size: 12px;">Showing up to <oj-bind-text value="[[ $variables.dashboardLimit ]]"></oj-bind-text> records. Use filters to narrow down.</span>
+              <div>
+                <oj-button on-oj-action="[[ $listeners.onDashboardPagePrev ]]" disabled="[[ $variables.dashboardOffset === 0 ]]"><span slot="startIcon" class="oj-ux-ico-arrow-left"></span>Previous</oj-button>
+                <oj-button on-oj-action="[[ $listeners.onDashboardPageNext ]]" disabled="[[ $functions.filterRequests($variables.allRequests, $variables.filterBusinessUnit, $variables.filterStatus, $variables.filterRiskLevel, $variables.filterDuplicateLevel).length < $variables.dashboardLimit ]]">Next<span slot="endIcon" class="oj-ux-ico-arrow-right"></span></oj-button>
+              </div>
+            </div>
+
           </div>
         </section>
       </oj-bind-if>
@@ -992,79 +1012,95 @@
               <div class="sp-empty-logs">No integration log entries match the current filters.</div>
             </oj-bind-if>
             <oj-bind-if test="[[ $functions.filterLogs($variables.integrationLogs, $variables.filterLogStatus, $variables.filterLogType).length > 0 ]]">
-              <div class="sp-log-header">
-                <span>Status</span>
-                <span>Request / Supplier</span>
-                <span>Type</span>
-                <span>OIC Instance</span>
-                <span>Updated</span>
-                <span>Action</span>
-              </div>
-              <oj-bind-for-each data="[[ $functions.filterLogs($variables.integrationLogs, $variables.filterLogStatus, $variables.filterLogType) ]]">
-                <template data-oj-as="log">
-                  <div class="sp-log-row">
-
-                    <!-- Status pill -->
-                    <span :class="[[ $functions.getLogStatusClass(log.data.status) ]]">
-                      <oj-bind-text value="[[ log.data.status || '—' ]]"></oj-bind-text>
-                    </span>
-
-                    <!-- Request / supplier info -->
-                    <div>
-                      <div class="sp-log-type">
-                        <oj-bind-text value="[[ log.data.request_number || ('Request #' + log.data.request_id) ]]"></oj-bind-text>
-                        &nbsp;—&nbsp;
-                        <oj-bind-text value="[[ log.data.supplier_name || '' ]]"></oj-bind-text>
-                      </div>
-                      <div class="sp-log-meta">
-                        <oj-bind-text value="[[ $functions.formatIntegrationType(log.data.integration_type) ]]"></oj-bind-text>
-                        <oj-bind-if test="[[ log.data.fusion_supplier_number ]]">
-                          &nbsp;· Fusion: <oj-bind-text value="[[ log.data.fusion_supplier_number ]]"></oj-bind-text>
-                        </oj-bind-if>
-                      </div>
-                      <oj-bind-if test="[[ log.data.error_message ]]">
-                        <div class="sp-log-err">⚠ <oj-bind-text value="[[ log.data.error_message ]]"></oj-bind-text></div>
+              <oj-table id="logs-table"
+                        aria-label="Integration Logs Table"
+                        data="[[ $variables.integrationLogsADP ]]"
+                        display="grid"
+                        layout="fixed"
+                        on-oj-sort="[[ $listeners.onLogsSort ]]"
+                        columns='[
+                          {"headerText": "Status", "field": "status", "sortable": "enabled", "template": "statusTemplate"},
+                          {"headerText": "Request / Supplier", "field": "request_number", "sortable": "enabled", "template": "requestTemplate", "width": "300px"},
+                          {"headerText": "Type", "field": "integration_type", "sortable": "enabled", "template": "typeTemplate"},
+                          {"headerText": "OIC Instance", "field": "oic_instance_id", "sortable": "enabled", "template": "oicTemplate"},
+                          {"headerText": "Updated", "field": "updated_at", "sortable": "enabled", "template": "dateTemplate"},
+                          {"headerText": "Action", "field": "action", "sortable": "disabled", "template": "actionTemplate"}
+                        ]'
+                        style="width: 100%; border-radius: 8px; border: 1px solid #ebf0f4; margin-bottom: 20px;">
+                
+                <template slot="statusTemplate" data-oj-as="cell">
+                  <span :class="[[ $functions.getLogStatusClass(cell.row.status) ]]">
+                    <oj-bind-text value="[[ cell.row.status || '—' ]]"></oj-bind-text>
+                  </span>
+                </template>
+                
+                <template slot="requestTemplate" data-oj-as="cell">
+                  <div>
+                    <div class="sp-log-type">
+                      <oj-bind-text value="[[ cell.row.request_number || ('Request #' + cell.row.request_id) ]]"></oj-bind-text>
+                      &nbsp;—&nbsp;
+                      <oj-bind-text value="[[ cell.row.supplier_name || '' ]]"></oj-bind-text>
+                    </div>
+                    <div class="sp-log-meta">
+                      <oj-bind-text value="[[ $functions.formatIntegrationType(cell.row.integration_type) ]]"></oj-bind-text>
+                      <oj-bind-if test="[[ cell.row.fusion_supplier_number ]]">
+                        &nbsp;· Fusion: <oj-bind-text value="[[ cell.row.fusion_supplier_number ]]"></oj-bind-text>
                       </oj-bind-if>
                     </div>
-
-                    <!-- Integration type badge -->
-                    <span class="sp-pill neutral" style="font-size:10px;">
-                      <oj-bind-text value="[[ (log.data.integration_type || '—').replace(/_/g, ' ') ]]"></oj-bind-text>
-                    </span>
-
-                    <!-- OIC instance ID + correlation ID -->
-                    <div>
-                      <div class="sp-log-ref"><oj-bind-text value="[[ log.data.oic_instance_id || '—' ]]"></oj-bind-text></div>
-                      <oj-bind-if test="[[ log.data.correlation_id ]]">
-                        <div class="sp-log-meta">Corr: <oj-bind-text value="[[ log.data.correlation_id ]]"></oj-bind-text></div>
-                      </oj-bind-if>
-                    </div>
-
-                    <!-- Timestamp -->
-                    <div class="sp-muted">
-                      <oj-bind-text value="[[ $functions.formatDate(log.data.updated_at || log.data.created_at) ]]"></oj-bind-text>
-                    </div>
-
-                    <!-- Retry button (only for retryable failures) -->
-                    <div>
-                      <oj-bind-if test="[[ $functions.isRetryable(log.data) ]]">
-                        <button type="button"
-                                class="sp-btn retry"
-                                :disabled="[[ $variables.retryBusyId === ('' + log.data.request_id) ]]"
-                                on-click="[[ $listeners.onRetryRequest ]]"
-                                :data-request-id="[[ log.data.request_id ]]">
-                          <oj-bind-if test="[[ $variables.retryBusyId !== ('' + log.data.request_id) ]]">↺ Retry</oj-bind-if>
-                          <oj-bind-if test="[[ $variables.retryBusyId === ('' + log.data.request_id) ]]">…</oj-bind-if>
-                        </button>
-                      </oj-bind-if>
-                      <oj-bind-if test="[[ !$functions.isRetryable(log.data) && (log.data.status || '').toUpperCase() === 'FAILED' ]]">
-                        <span class="sp-muted" style="font-size:10px;">Not retryable</span>
-                      </oj-bind-if>
-                    </div>
-
+                    <oj-bind-if test="[[ cell.row.error_message ]]">
+                      <div class="sp-log-err">⚠ <oj-bind-text value="[[ cell.row.error_message ]]"></oj-bind-text></div>
+                    </oj-bind-if>
                   </div>
                 </template>
-              </oj-bind-for-each>
+                
+                <template slot="typeTemplate" data-oj-as="cell">
+                  <span :class="[[ $functions.getIntegrationTypeClass(cell.row.integration_type) ]]" style="font-size:10px;">
+                    <oj-bind-text value="[[ (cell.row.integration_type || '—').replace(/_/g, ' ') ]]"></oj-bind-text>
+                  </span>
+                </template>
+                
+                <template slot="oicTemplate" data-oj-as="cell">
+                  <div>
+                    <div class="sp-log-ref"><oj-bind-text value="[[ cell.row.oic_instance_id || '—' ]]"></oj-bind-text></div>
+                    <oj-bind-if test="[[ cell.row.correlation_id ]]">
+                      <div class="sp-log-meta">Corr: <oj-bind-text value="[[ cell.row.correlation_id ]]"></oj-bind-text></div>
+                    </oj-bind-if>
+                  </div>
+                </template>
+                
+                <template slot="dateTemplate" data-oj-as="cell">
+                  <div class="sp-muted">
+                    <oj-bind-text value="[[ $functions.formatDate(cell.row.updated_at || cell.row.created_at) ]]"></oj-bind-text>
+                  </div>
+                </template>
+                
+                <template slot="actionTemplate" data-oj-as="cell">
+                  <div>
+                    <oj-bind-if test="[[ $functions.isRetryable(cell.row) ]]">
+                      <button type="button"
+                              class="sp-btn retry"
+                              :disabled="[[ $variables.retryBusyId === ('' + cell.row.request_id) ]]"
+                              on-click="[[ $listeners.onRetryRequest ]]"
+                              :data-request-id="[[ cell.row.request_id ]]">
+                        <oj-bind-if test="[[ $variables.retryBusyId !== ('' + cell.row.request_id) ]]">↺ Retry</oj-bind-if>
+                        <oj-bind-if test="[[ $variables.retryBusyId === ('' + cell.row.request_id) ]]">…</oj-bind-if>
+                      </button>
+                    </oj-bind-if>
+                    <oj-bind-if test="[[ !$functions.isRetryable(cell.row) && (cell.row.status || '').toUpperCase() === 'FAILED' ]]">
+                      <span class="sp-muted" style="font-size:10px;">Not retryable</span>
+                    </oj-bind-if>
+                  </div>
+                </template>
+              </oj-table>
+              
+              <!-- Logs Pagination -->
+              <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 16px;">
+                <span class="sp-muted" style="font-size: 12px;">Showing up to <oj-bind-text value="[[ $variables.logsLimit ]]"></oj-bind-text> records.</span>
+                <div>
+                  <oj-button on-oj-action="[[ $listeners.onLogsPagePrev ]]" disabled="[[ $variables.logsOffset === 0 ]]"><span slot="startIcon" class="oj-ux-ico-arrow-left"></span>Previous</oj-button>
+                  <oj-button on-oj-action="[[ $listeners.onLogsPageNext ]]" disabled="[[ $variables.integrationLogsADP.data.length < $variables.logsLimit ]]">Next<span slot="endIcon" class="oj-ux-ico-arrow-right"></span></oj-button>
+                </div>
+              </div>
             </oj-bind-if>
           </oj-bind-if>
 
@@ -1145,10 +1181,12 @@
             </div>
             <div style="flex:1;">
               <label class="field-label">Search by Request Number or ID</label>
-              <input type="text"
-                     :value="[[ $variables.filterHistoryRequestId ]]"
-                     on-input="[[ $listeners.onFilterHistoryRequestIdInput ]]"
-                     placeholder="e.g. REQ-1004 or 42…"/>
+              <oj-input-text value="{{ $variables.filterHistoryRequestId }}"
+                             on-value-changed="[[ $listeners.onFilterHistoryRequestIdInput ]]"
+                             placeholder="e.g. REQ-1004 or 42…"
+                             clear-icon="always"
+                             style="width:100%;">
+              </oj-input-text>
             </div>
           </div>
 
@@ -1163,84 +1201,99 @@
             </oj-bind-if>
 
             <oj-bind-if test="[[ $functions.filterHistory($variables.actionHistory, $variables.filterHistoryActionType, $variables.filterHistoryRequestId).length > 0 ]]">
-              <div class="sp-hist-header">
-                <span></span>
-                <span>Action</span>
-                <span>Request / Details</span>
-                <span>Actor</span>
-                <span>Role</span>
-                <span>Timestamp</span>
-              </div>
-
-              <oj-bind-for-each data="[[ $functions.filterHistory($variables.actionHistory, $variables.filterHistoryActionType, $variables.filterHistoryRequestId) ]]">
-                <template data-oj-as="entry">
-                  <div class="sp-hist-row">
-
-                    <!-- Icon -->
-                    <div class="sp-hist-icon">
-                      <oj-bind-text value="[[ $functions.getActionTypeIcon(entry.data.action_type) ]]"></oj-bind-text>
-                    </div>
-
-                    <!-- Action type badge -->
-                    <div>
-                      <span :class="[[ $functions.getActionTypeBadgeClass(entry.data.action_type) ]]" style="font-size:10px;">
-                        <oj-bind-text value="[[ (entry.data.action_type || '—').replace(/_/g,' ') ]]"></oj-bind-text>
-                      </span>
-                    </div>
-
-                    <!-- Request + detail -->
-                    <div>
-                      <div class="sp-hist-request">
-                        <oj-bind-text value="[[ entry.data.request_number || ('Request #' + entry.data.request_id) ]]"></oj-bind-text>
-                      </div>
-                      <div class="sp-hist-supplier">
-                        <oj-bind-text value="[[ entry.data.supplier_name || '' ]]"></oj-bind-text>
-                        <oj-bind-if test="[[ entry.data.business_unit ]]">
-                          &nbsp;·&nbsp;<oj-bind-text value="[[ entry.data.business_unit ]]"></oj-bind-text>
-                        </oj-bind-if>
-                      </div>
-                      <oj-bind-if test="[[ entry.data.action_note || entry.data.reason || entry.data.decision_reason ]]">
-                        <div class="sp-hist-detail">
-                          <span class="detail-note">
-                            "<oj-bind-text value="[[ entry.data.action_note || entry.data.reason || entry.data.decision_reason ]]"></oj-bind-text>"
-                          </span>
-                        </div>
-                      </oj-bind-if>
-                      <oj-bind-if test="[[ entry.data.new_status ]]">
-                        <div class="sp-hist-detail">
-                          <span class="sp-muted">→ </span>
-                          <span class="sp-pill neutral" style="font-size:10px;">
-                            <oj-bind-text value="[[ entry.data.new_status ]]"></oj-bind-text>
-                          </span>
-                          <oj-bind-if test="[[ entry.data.previous_status ]]">
-                            <span class="sp-muted" style="font-size:10px;">
-                              &nbsp;(was&nbsp;<oj-bind-text value="[[ entry.data.previous_status ]]"></oj-bind-text>)
-                            </span>
-                          </oj-bind-if>
-                        </div>
-                      </oj-bind-if>
-                    </div>
-
-                    <!-- Actor display name -->
-                    <div class="sp-hist-actor">
-                      <oj-bind-text value="[[ entry.data.actor_display_name || entry.data.actor_subject_id || '—' ]]"></oj-bind-text>
-                    </div>
-
-                    <!-- Actor role -->
-                    <div>
-                      <oj-bind-if test="[[ entry.data.actor_role ]]">
-                        <span class="actor-role"><oj-bind-text value="[[ entry.data.actor_role ]]"></oj-bind-text></span>
-                      </oj-bind-if>
-                    </div>
-
-                    <!-- Timestamp -->
-                    <div class="sp-hist-time">
-                      <oj-bind-text value="[[ $functions.formatDate(entry.data.action_at || entry.data.created_at) ]]"></oj-bind-text>
-                    </div>
-
+              <oj-table id="history-table"
+                        aria-label="Action History Table"
+                        data="[[ $variables.actionHistoryADP ]]"
+                        display="grid"
+                        layout="fixed"
+                        on-oj-sort="[[ $listeners.onHistorySort ]]"
+                        columns='[
+                          {"headerText": "", "field": "icon", "sortable": "disabled", "template": "iconTemplate", "width": "50px"},
+                          {"headerText": "Action", "field": "action_type", "sortable": "enabled", "template": "actionTypeTemplate"},
+                          {"headerText": "Request / Details", "field": "request_number", "sortable": "enabled", "template": "requestTemplate", "width": "300px"},
+                          {"headerText": "Actor", "field": "actor_subject_id", "sortable": "enabled", "template": "actorTemplate"},
+                          {"headerText": "Role", "field": "actor_role", "sortable": "disabled", "template": "roleTemplate"},
+                          {"headerText": "Timestamp", "field": "action_at", "sortable": "enabled", "template": "timeTemplate"}
+                        ]'
+                        style="width: 100%; border-radius: 8px; border: 1px solid #ebf0f4; margin-bottom: 20px;">
+                
+                <template slot="iconTemplate" data-oj-as="cell">
+                  <div class="sp-hist-icon">
+                    <oj-bind-text value="[[ $functions.getActionTypeIcon(cell.row.action_type) ]]"></oj-bind-text>
                   </div>
                 </template>
-              </oj-bind-for-each>
+                
+                <template slot="actionTypeTemplate" data-oj-as="cell">
+                  <div>
+                    <span :class="[[ $functions.getActionTypeBadgeClass(cell.row.action_type) ]]" style="font-size:10px;">
+                      <oj-bind-text value="[[ (cell.row.action_type || '—').replace(/_/g,' ') ]]"></oj-bind-text>
+                    </span>
+                  </div>
+                </template>
+                
+                <template slot="requestTemplate" data-oj-as="cell">
+                  <div>
+                    <div class="sp-hist-request">
+                      <oj-bind-text value="[[ cell.row.request_number || ('Request #' + cell.row.request_id) ]]"></oj-bind-text>
+                    </div>
+                    <div class="sp-hist-supplier">
+                      <oj-bind-text value="[[ cell.row.supplier_name || '' ]]"></oj-bind-text>
+                      <oj-bind-if test="[[ cell.row.business_unit ]]">
+                        &nbsp;·&nbsp;<oj-bind-text value="[[ cell.row.business_unit ]]"></oj-bind-text>
+                      </oj-bind-if>
+                    </div>
+                    <oj-bind-if test="[[ cell.row.action_note || cell.row.reason || cell.row.decision_reason ]]">
+                      <div class="sp-hist-detail">
+                        <span class="detail-note">
+                          "<oj-bind-text value="[[ cell.row.action_note || cell.row.reason || cell.row.decision_reason ]]"></oj-bind-text>"
+                        </span>
+                      </div>
+                    </oj-bind-if>
+                    <oj-bind-if test="[[ cell.row.new_status ]]">
+                      <div class="sp-hist-detail">
+                        <span class="sp-muted">→ </span>
+                        <span class="sp-pill neutral" style="font-size:10px;">
+                          <oj-bind-text value="[[ cell.row.new_status ]]"></oj-bind-text>
+                        </span>
+                        <oj-bind-if test="[[ cell.row.previous_status ]]">
+                          <span class="sp-muted" style="font-size:10px;">
+                            &nbsp;(was&nbsp;<oj-bind-text value="[[ cell.row.previous_status ]]"></oj-bind-text>)
+                          </span>
+                        </oj-bind-if>
+                      </div>
+                    </oj-bind-if>
+                  </div>
+                </template>
+                
+                <template slot="actorTemplate" data-oj-as="cell">
+                  <div class="sp-hist-actor">
+                    <oj-bind-text value="[[ cell.row.actor_display_name || cell.row.actor_subject_id || '—' ]]"></oj-bind-text>
+                  </div>
+                </template>
+                
+                <template slot="roleTemplate" data-oj-as="cell">
+                  <div>
+                    <oj-bind-if test="[[ cell.row.actor_role ]]">
+                      <span class="actor-role"><oj-bind-text value="[[ cell.row.actor_role ]]"></oj-bind-text></span>
+                    </oj-bind-if>
+                  </div>
+                </template>
+                
+                <template slot="timeTemplate" data-oj-as="cell">
+                  <div class="sp-hist-time">
+                    <oj-bind-text value="[[ $functions.formatDate(cell.row.action_at || cell.row.created_at) ]]"></oj-bind-text>
+                  </div>
+                </template>
+              </oj-table>
+              
+              <!-- History Pagination -->
+              <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 16px;">
+                <span class="sp-muted" style="font-size: 12px;">Showing up to <oj-bind-text value="[[ $variables.historyLimit ]]"></oj-bind-text> records.</span>
+                <div>
+                  <oj-button on-oj-action="[[ $listeners.onHistoryPagePrev ]]" disabled="[[ $variables.historyOffset === 0 ]]"><span slot="startIcon" class="oj-ux-ico-arrow-left"></span>Previous</oj-button>
+                  <oj-button on-oj-action="[[ $listeners.onHistoryPageNext ]]" disabled="[[ $variables.actionHistoryADP.data.length < $variables.historyLimit ]]">Next<span slot="endIcon" class="oj-ux-ico-arrow-right"></span></oj-button>
+                </div>
+              </div>
             </oj-bind-if>
           </oj-bind-if>
 

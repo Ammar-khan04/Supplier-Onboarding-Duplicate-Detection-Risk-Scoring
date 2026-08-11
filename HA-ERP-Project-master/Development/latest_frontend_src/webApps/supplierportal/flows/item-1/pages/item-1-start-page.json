@@ -382,6 +382,72 @@
     "totalSpendBandsValid": {
       "type": "boolean",
       "defaultValue": true
+    },
+    "dashboardOffset": {
+      "type": "number",
+      "defaultValue": 0
+    },
+    "dashboardSortCol": {
+      "type": "string",
+      "defaultValue": "updated_at"
+    },
+    "dashboardSortDir": {
+      "type": "string",
+      "defaultValue": "desc"
+    },
+    "dashboardLimit": {
+      "type": "number",
+      "defaultValue": 25
+    },
+    "logsOffset": {
+      "type": "number",
+      "defaultValue": 0
+    },
+    "logsSortCol": {
+      "type": "string",
+      "defaultValue": "updated_at"
+    },
+    "logsSortDir": {
+      "type": "string",
+      "defaultValue": "desc"
+    },
+    "logsLimit": {
+      "type": "number",
+      "defaultValue": 25
+    },
+    "historyOffset": {
+      "type": "number",
+      "defaultValue": 0
+    },
+    "historySortCol": {
+      "type": "string",
+      "defaultValue": "action_at"
+    },
+    "historySortDir": {
+      "type": "string",
+      "defaultValue": "desc"
+    },
+    "historyLimit": {
+      "type": "number",
+      "defaultValue": 200
+    },
+    "integrationLogsADP": {
+      "type": "vb/ArrayDataProvider2",
+      "defaultValue": {
+        "data": "{{ $variables.integrationLogs }}",
+        "keyAttributes": "job_id"
+      }
+    },
+    "actionHistoryADP": {
+      "type": "vb/ArrayDataProvider2",
+      "defaultValue": {
+        "data": "{{ $variables.actionHistory }}",
+        "keyAttributes": "history_id"
+      }
+    },
+    "filterSearchTerm": {
+      "type": "string",
+      "defaultValue": ""
     }
   },
   "eventListeners": {
@@ -904,6 +970,109 @@
           "chainId": "saveAllSpendBandsChain"
         }
       ]
+    },
+    "onDashboardSort": {
+      "chains": [
+        {
+          "chainId": "onDashboardSortChain",
+          "parameters": {
+            "header": "{{ $event.detail.header }}",
+            "direction": "{{ $event.detail.direction }}"
+          }
+        }
+      ]
+    },
+    "onDashboardPagePrev": {
+      "chains": [
+        {
+          "chainId": "onDashboardPageChain",
+          "parameters": {
+            "direction": "prev"
+          }
+        }
+      ]
+    },
+    "onDashboardPageNext": {
+      "chains": [
+        {
+          "chainId": "onDashboardPageChain",
+          "parameters": {
+            "direction": "next"
+          }
+        }
+      ]
+    },
+    "onLogsSort": {
+      "chains": [
+        {
+          "chainId": "onLogsSortChain",
+          "parameters": {
+            "header": "{{ $event.detail.header }}",
+            "direction": "{{ $event.detail.direction }}"
+          }
+        }
+      ]
+    },
+    "onLogsPagePrev": {
+      "chains": [
+        {
+          "chainId": "onLogsPageChain",
+          "parameters": {
+            "direction": "prev"
+          }
+        }
+      ]
+    },
+    "onLogsPageNext": {
+      "chains": [
+        {
+          "chainId": "onLogsPageChain",
+          "parameters": {
+            "direction": "next"
+          }
+        }
+      ]
+    },
+    "onHistorySort": {
+      "chains": [
+        {
+          "chainId": "onHistorySortChain",
+          "parameters": {
+            "header": "{{ $event.detail.header }}",
+            "direction": "{{ $event.detail.direction }}"
+          }
+        }
+      ]
+    },
+    "onHistoryPagePrev": {
+      "chains": [
+        {
+          "chainId": "onHistoryPageChain",
+          "parameters": {
+            "direction": "prev"
+          }
+        }
+      ]
+    },
+    "onHistoryPageNext": {
+      "chains": [
+        {
+          "chainId": "onHistoryPageChain",
+          "parameters": {
+            "direction": "next"
+          }
+        }
+      ]
+    },
+    "onSearchTermChange": {
+      "chains": [
+        {
+          "chainId": "onSearchTermChangeChain",
+          "parameters": {
+            "value": "{{ $event.detail.value }}"
+          }
+        }
+      ]
     }
   },
   "chains": {
@@ -1413,10 +1582,14 @@
           "parameters": {
             "endpoint": "ORDS-Specification/getRequests",
             "uriParams": {
-              "limit": 500,
-              "offset": 0,
+              "limit": "{{ $page.variables.dashboardLimit }}",
+              "offset": "{{ $page.variables.dashboardOffset }}",
               "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
-              "actor_roles": "{{ $page.variables.currentRole }}"
+              "actor_roles": "{{ $page.variables.currentRole }}",
+              "sort_col": "{{ $page.variables.dashboardSortCol }}",
+              "sort_dir": "{{ $page.variables.dashboardSortDir }}",
+              "status": "{{ $page.variables.filterStatus === 'ALL' ? '' : $page.variables.filterStatus }}",
+              "search": "{{ $page.variables.filterSearchTerm || '' }}"
             }
           },
           "outcomes": {
@@ -2173,6 +2346,9 @@
           "parameters": {
             "$page.variables.filterBusinessUnit": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.dashboardOffset": {
+              "source": 0
             }
           }
         }
@@ -2192,6 +2368,9 @@
           "parameters": {
             "$page.variables.filterStatus": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.dashboardOffset": {
+              "source": 0
             }
           }
         }
@@ -2211,6 +2390,9 @@
           "parameters": {
             "$page.variables.filterRiskLevel": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.dashboardOffset": {
+              "source": 0
             }
           }
         }
@@ -2230,6 +2412,9 @@
           "parameters": {
             "$page.variables.filterDuplicateLevel": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.dashboardOffset": {
+              "source": 0
             }
           }
         }
@@ -2276,10 +2461,14 @@
           "parameters": {
             "endpoint": "ORDS-Specification/getIntegrationLogs",
             "uriParams": {
-              "limit": 200,
-              "offset": 0,
+              "limit": "{{ $page.variables.logsLimit }}",
+              "offset": "{{ $page.variables.logsOffset }}",
               "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
-              "actor_roles": "{{ $page.variables.currentRole }}"
+              "actor_roles": "{{ $page.variables.currentRole }}",
+              "sort_col": "{{ $page.variables.logsSortCol }}",
+              "sort_dir": "{{ $page.variables.logsSortDir }}",
+              "type": "{{ $page.variables.filterLogType === 'ALL' ? '' : $page.variables.filterLogType }}",
+              "status": "{{ $page.variables.filterLogStatus === 'ALL' ? '' : $page.variables.filterLogStatus }}"
             }
           },
           "outcomes": {
@@ -2338,6 +2527,9 @@
           "parameters": {
             "$page.variables.filterLogStatus": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.logsOffset": {
+              "source": 0
             }
           }
         }
@@ -2357,6 +2549,9 @@
           "parameters": {
             "$page.variables.filterLogType": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.logsOffset": {
+              "source": 0
             }
           }
         }
@@ -3012,8 +3207,11 @@
             "uriParams": {
               "actor_subject_id": "{{ $functions.actorSubjectId($page.variables.currentRole) }}",
               "actor_roles": "{{ $page.variables.currentRole }}",
-              "limit": 500,
-              "offset": 0
+              "limit": "{{ $page.variables.historyLimit }}",
+              "offset": "{{ $page.variables.historyOffset }}",
+              "sort_col": "{{ $page.variables.historySortCol }}",
+              "sort_dir": "{{ $page.variables.historySortDir }}",
+              "action_type": "{{ $page.variables.filterHistoryActionType === 'ALL' ? '' : $page.variables.filterHistoryActionType }}"
             }
           },
           "outcomes": {
@@ -3069,6 +3267,9 @@
           "parameters": {
             "$page.variables.filterHistoryActionType": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.historyOffset": {
+              "source": 0
             }
           }
         }
@@ -3088,6 +3289,9 @@
           "parameters": {
             "$page.variables.filterHistoryRequestId": {
               "source": "{{ $chain.variables.value }}"
+            },
+            "$page.variables.historyOffset": {
+              "source": 0
             }
           }
         }
@@ -3645,6 +3849,232 @@
           "parameters": {
             "outcome": "success",
             "payload": "{{ false }}"
+          }
+        }
+      }
+    },
+    "onDashboardSortChain": {
+      "variables": {
+        "header": {
+          "type": "string",
+          "input": "fromCaller"
+        },
+        "direction": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignSort",
+      "actions": {
+        "assignSort": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.dashboardSortCol": {
+              "source": "{{ $variables.header }}"
+            },
+            "$page.variables.dashboardSortDir": {
+              "source": "{{ $page.variables.dashboardSortCol === $variables.header && $page.variables.dashboardSortDir === 'asc' ? 'desc' : 'asc' }}"
+            },
+            "$page.variables.dashboardOffset": {
+              "source": 0
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadDashboardDataChain"
+          }
+        }
+      }
+    },
+    "onDashboardPageChain": {
+      "variables": {
+        "direction": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignOffset",
+      "actions": {
+        "assignOffset": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.dashboardOffset": {
+              "source": "{{ $variables.direction === 'next' ? $page.variables.dashboardOffset + $page.variables.dashboardLimit : Math.max(0, $page.variables.dashboardOffset - $page.variables.dashboardLimit) }}"
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadDashboardDataChain"
+          }
+        }
+      }
+    },
+    "onLogsSortChain": {
+      "variables": {
+        "header": {
+          "type": "string",
+          "input": "fromCaller"
+        },
+        "direction": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignSort",
+      "actions": {
+        "assignSort": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.logsSortCol": {
+              "source": "{{ $variables.header }}"
+            },
+            "$page.variables.logsSortDir": {
+              "source": "{{ $page.variables.logsSortCol === $variables.header && $page.variables.logsSortDir === 'asc' ? 'desc' : 'asc' }}"
+            },
+            "$page.variables.logsOffset": {
+              "source": 0
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadIntegrationLogsChain"
+          }
+        }
+      }
+    },
+    "onLogsPageChain": {
+      "variables": {
+        "direction": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignOffset",
+      "actions": {
+        "assignOffset": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.logsOffset": {
+              "source": "{{ $variables.direction === 'next' ? $page.variables.logsOffset + $page.variables.logsLimit : Math.max(0, $page.variables.logsOffset - $page.variables.logsLimit) }}"
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadIntegrationLogsChain"
+          }
+        }
+      }
+    },
+    "onHistorySortChain": {
+      "variables": {
+        "header": {
+          "type": "string",
+          "input": "fromCaller"
+        },
+        "direction": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignSort",
+      "actions": {
+        "assignSort": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.historySortCol": {
+              "source": "{{ $variables.header }}"
+            },
+            "$page.variables.historySortDir": {
+              "source": "{{ $page.variables.historySortCol === $variables.header && $page.variables.historySortDir === 'asc' ? 'desc' : 'asc' }}"
+            },
+            "$page.variables.historyOffset": {
+              "source": 0
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadActionHistoryChain"
+          }
+        }
+      }
+    },
+    "onHistoryPageChain": {
+      "variables": {
+        "direction": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignOffset",
+      "actions": {
+        "assignOffset": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.historyOffset": {
+              "source": "{{ $variables.direction === 'next' ? $page.variables.historyOffset + $page.variables.historyLimit : Math.max(0, $page.variables.historyOffset - $page.variables.historyLimit) }}"
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadActionHistoryChain"
+          }
+        }
+      }
+    },
+    "onSearchTermChangeChain": {
+      "variables": {
+        "value": {
+          "type": "string",
+          "input": "fromCaller"
+        }
+      },
+      "root": "assignSearch",
+      "actions": {
+        "assignSearch": {
+          "module": "vb/action/builtin/assignVariablesAction",
+          "parameters": {
+            "$page.variables.dashboardOffset": {
+              "source": 0
+            }
+          },
+          "outcomes": {
+            "success": "reload"
+          }
+        },
+        "reload": {
+          "module": "vb/action/builtin/callChainAction",
+          "parameters": {
+            "id": "loadDashboardDataChain"
           }
         }
       }

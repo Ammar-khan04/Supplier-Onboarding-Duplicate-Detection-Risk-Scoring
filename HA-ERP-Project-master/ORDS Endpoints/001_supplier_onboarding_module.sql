@@ -80,10 +80,23 @@ begin
           d.request_id
         ) as allowed_actions
       from request_dashboard_v d
-      where d.requester_subject_id = coalesce(:actor_subject_id, 'REQ_AMINA_SUB')
+      where (d.requester_subject_id = coalesce(:actor_subject_id, 'REQ_AMINA_SUB')
          or supplier_auth_pkg.has_role(coalesce(:actor_roles, 'REQUESTER'), 'REVIEWER') = 'Y'
-         or supplier_auth_pkg.has_role(coalesce(:actor_roles, 'REQUESTER'), 'ADMIN') = 'Y'
-      order by d.updated_at desc
+         or supplier_auth_pkg.has_role(coalesce(:actor_roles, 'REQUESTER'), 'ADMIN') = 'Y')
+         and (:status is null or d.status = :status)
+         and (:search is null or :search = 'undefined' or upper(d.supplier_name) like '%' || upper(:search) || '%' or to_char(d.request_number) like '%' || :search || '%')
+      order by
+        case when lower(:sort_col) = 'status' and lower(:sort_dir) = 'asc' then d.status end asc,
+        case when lower(:sort_col) = 'status' and lower(:sort_dir) = 'desc' then d.status end desc,
+        case when lower(:sort_col) = 'supplier_name' and lower(:sort_dir) = 'asc' then d.supplier_name end asc,
+        case when lower(:sort_col) = 'supplier_name' and lower(:sort_dir) = 'desc' then d.supplier_name end desc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'asc' then d.request_number end asc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'desc' then d.request_number end desc,
+        case when lower(:sort_col) = 'risk_level' and lower(:sort_dir) = 'asc' then case d.risk_level when 'CRITICAL' then 1 when 'HIGH' then 2 when 'MEDIUM' then 3 when 'LOW' then 4 else 5 end end asc,
+        case when lower(:sort_col) = 'risk_level' and lower(:sort_dir) = 'desc' then case d.risk_level when 'CRITICAL' then 1 when 'HIGH' then 2 when 'MEDIUM' then 3 when 'LOW' then 4 else 5 end end desc,
+        case when lower(:sort_col) = 'duplicate_level' and lower(:sort_dir) = 'asc' then case d.duplicate_level when 'EXACT' then 1 when 'STRONG' then 2 when 'POSSIBLE' then 3 when 'NONE' then 4 else 5 end end asc,
+        case when lower(:sort_col) = 'duplicate_level' and lower(:sort_dir) = 'desc' then case d.duplicate_level when 'EXACT' then 1 when 'STRONG' then 2 when 'POSSIBLE' then 3 when 'NONE' then 4 else 5 end end desc,
+        d.updated_at desc
       offset nvl(to_number(:offset), 0) rows
       fetch next nvl(to_number(:limit), 25) rows only
     ]'
@@ -551,7 +564,20 @@ begin
       from integration_log_safe_v
       where (:type is null or integration_type = upper(:type))
         and (:status is null or status = upper(:status))
-      order by updated_at desc
+      order by
+        case when lower(:sort_col) = 'status' and lower(:sort_dir) = 'asc' then status end asc,
+        case when lower(:sort_col) = 'status' and lower(:sort_dir) = 'desc' then status end desc,
+        case when lower(:sort_col) = 'supplier_name' and lower(:sort_dir) = 'asc' then supplier_name end asc,
+        case when lower(:sort_col) = 'supplier_name' and lower(:sort_dir) = 'desc' then supplier_name end desc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'asc' then request_number end asc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'desc' then request_number end desc,
+        case when lower(:sort_col) = 'integration_type' and lower(:sort_dir) = 'asc' then integration_type end asc,
+        case when lower(:sort_col) = 'integration_type' and lower(:sort_dir) = 'desc' then integration_type end desc,
+        case when lower(:sort_col) = 'oic_instance_id' and lower(:sort_dir) = 'asc' then oic_instance_id end asc,
+        case when lower(:sort_col) = 'oic_instance_id' and lower(:sort_dir) = 'desc' then oic_instance_id end desc,
+        case when lower(:sort_col) = 'updated_at' and lower(:sort_dir) = 'asc' then updated_at end asc,
+        case when lower(:sort_col) = 'updated_at' and lower(:sort_dir) = 'desc' then updated_at end desc,
+        updated_at desc
       offset nvl(to_number(:offset), 0) rows
       fetch next nvl(to_number(:limit), 25) rows only
     ]'
@@ -571,7 +597,18 @@ begin
       from integration_log_safe_v
       where (:type is null or integration_type = upper(:type))
         and (:status is null or status = upper(:status))
-      order by created_at
+      order by
+        case when lower(:sort_col) = 'status' and lower(:sort_dir) = 'asc' then status end asc,
+        case when lower(:sort_col) = 'status' and lower(:sort_dir) = 'desc' then status end desc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'asc' then request_number end asc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'desc' then request_number end desc,
+        case when lower(:sort_col) = 'integration_type' and lower(:sort_dir) = 'asc' then integration_type end asc,
+        case when lower(:sort_col) = 'integration_type' and lower(:sort_dir) = 'desc' then integration_type end desc,
+        case when lower(:sort_col) = 'oic_instance_id' and lower(:sort_dir) = 'asc' then oic_instance_id end asc,
+        case when lower(:sort_col) = 'oic_instance_id' and lower(:sort_dir) = 'desc' then oic_instance_id end desc,
+        case when lower(:sort_col) = 'updated_at' and lower(:sort_dir) = 'asc' then updated_at end asc,
+        case when lower(:sort_col) = 'updated_at' and lower(:sort_dir) = 'desc' then updated_at end desc,
+        created_at desc
       offset nvl(to_number(:offset), 0) rows
       fetch next nvl(to_number(:limit), 25) rows only
     ]'
@@ -914,7 +951,18 @@ begin
       or sr.requester_subject_id = coalesce(:actor_subject_id, 'REQ_AMINA_SUB')
     )
     and (:action_type is null or ah.action = upper(:action_type))
-    order by ah.action_at desc
+    order by
+        case when lower(:sort_col) = 'action_type' and lower(:sort_dir) = 'asc' then ah.action end asc,
+        case when lower(:sort_col) = 'action_type' and lower(:sort_dir) = 'desc' then ah.action end desc,
+        case when lower(:sort_col) = 'supplier_name' and lower(:sort_dir) = 'asc' then sr.supplier_name end asc,
+        case when lower(:sort_col) = 'supplier_name' and lower(:sort_dir) = 'desc' then sr.supplier_name end desc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'asc' then sr.request_number end asc,
+        case when lower(:sort_col) = 'request_number' and lower(:sort_dir) = 'desc' then sr.request_number end desc,
+        case when lower(:sort_col) = 'actor_subject_id' and lower(:sort_dir) = 'asc' then ah.actor_subject_id end asc,
+        case when lower(:sort_col) = 'actor_subject_id' and lower(:sort_dir) = 'desc' then ah.actor_subject_id end desc,
+        case when lower(:sort_col) = 'action_at' and lower(:sort_dir) = 'asc' then ah.action_at end asc,
+        case when lower(:sort_col) = 'action_at' and lower(:sort_dir) = 'desc' then ah.action_at end desc,
+        ah.action_at desc
     offset nvl(to_number(:offset), 0) rows
     fetch next nvl(to_number(:limit), 200) rows only
   ]'
