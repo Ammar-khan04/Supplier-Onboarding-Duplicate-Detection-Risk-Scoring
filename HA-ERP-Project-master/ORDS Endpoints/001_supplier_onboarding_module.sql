@@ -682,51 +682,82 @@ begin
       p_method      => 'POST',
       p_source_type => ords.source_type_plsql,
       p_source      => q'[
+      declare
+        l_body          clob;
+        l_status        varchar2(30);
+        l_suppliers_cnt number := 0;
+        l_tax_cnt       number := 0;
+        l_site_cnt      number := 0;
+        l_bank_cnt      number := 0;
+        l_err           varchar2(4000);
       begin
-        merge into fusion_supplier_ref t
-        using (
-          select
-            :fusion_supplier_id as fusion_supplier_id,
-            :supplier_number as supplier_number,
-            :supplier_name as supplier_name,
-            supplier_projection_pkg.normalize_text(:supplier_name) as supplier_name_normalized,
-            :supplier_type as supplier_type,
-            coalesce(:sync_id, 'MANUAL_SYNC') as sync_id
-          from dual
-        ) s
-        on (t.fusion_supplier_id = s.fusion_supplier_id)
-        when matched then update set
-          t.supplier_number = s.supplier_number,
-          t.supplier_name = s.supplier_name,
-          t.supplier_name_normalized = s.supplier_name_normalized,
-          t.supplier_type = s.supplier_type,
-          t.active = 'Y',
-          t.last_seen_sync_id = s.sync_id,
-          t.last_synced_at = systimestamp
-        when not matched then insert (
-          fusion_supplier_id,
-          supplier_number,
-          supplier_name,
-          supplier_name_normalized,
-          supplier_type,
-          active,
-          last_seen_sync_id
-        ) values (
-          s.fusion_supplier_id,
-          s.supplier_number,
-          s.supplier_name,
-          s.supplier_name_normalized,
-          s.supplier_type,
-          'Y',
-          s.sync_id
-        );
-        owa_util.mime_header('application/json', true);
-        htp.p('{
-  "status": "supplier_reference_received"
-}');
+        l_body := :body_text;
+
+        -- 1. If JSON body is provided, process via package
+        if l_body is not null and dbms_lob.getlength(l_body) > 0 and (instr(l_body, '{') > 0 or instr(l_body, '[') > 0) then
+          supplier_reference_pkg.sync_batch(
+            p_payload          => l_body,
+            p_status           => l_status,
+            p_suppliers_synced => l_suppliers_cnt,
+            p_tax_synced       => l_tax_cnt,
+            p_sites_synced     => l_site_cnt,
+            p_bank_synced      => l_bank_cnt,
+            p_error_message    => l_err
+          );
+
+          if l_status = 'SUCCESS' then
+            :status_code := 200;
+            owa_util.mime_header('application/json', true);
+            htp.p('{' ||
+              '"status":"SUCCESS",' ||
+              '"suppliersSynced":' || to_char(l_suppliers_cnt) || ',' ||
+              '"taxRegistrationsSynced":' || to_char(l_tax_cnt) || ',' ||
+              '"sitesSynced":' || to_char(l_site_cnt) || ',' ||
+              '"bankAccountsSynced":' || to_char(l_bank_cnt) ||
+            '}');
+          else
+            :status_code := 400;
+            owa_util.mime_header('application/json', true);
+            htp.p('{"error":"' || replace(replace(l_err, '"', '\"'), chr(10), ' ') || '"}');
+          end if;
+        else
+          -- 2. Fallback: single supplier flat parameter insert
+          merge into fusion_supplier_ref t
+          using (
+            select
+              :fusion_supplier_id as fusion_supplier_id,
+              coalesce(:supplier_number, 'SUP-' || :fusion_supplier_id) as supplier_number,
+              :supplier_name as supplier_name,
+              supplier_projection_pkg.normalize_text(:supplier_name) as supplier_name_normalized,
+              :supplier_type as supplier_type,
+              coalesce(:sync_id, 'MANUAL_SYNC') as sync_id
+            from dual
+          ) s
+          on (t.fusion_supplier_id = s.fusion_supplier_id)
+          when matched then update set
+            t.supplier_number = s.supplier_number,
+            t.supplier_name = s.supplier_name,
+            t.supplier_name_normalized = s.supplier_name_normalized,
+            t.supplier_type = s.supplier_type,
+            t.active = 'Y',
+            t.last_seen_sync_id = s.sync_id,
+            t.last_synced_at = systimestamp
+          when not matched then insert (
+            fusion_supplier_id, supplier_number, supplier_name,
+            supplier_name_normalized, supplier_type, active, last_seen_sync_id
+          ) values (
+            s.fusion_supplier_id, s.supplier_number, s.supplier_name,
+            s.supplier_name_normalized, s.supplier_type, 'Y', s.sync_id
+          );
+
+          :status_code := 200;
+          owa_util.mime_header('application/json', true);
+          htp.p('{"status":"SUCCESS","suppliersSynced":1}');
+        end if;
       end;
     ]'
    );
+
 
    ords.define_template(
       p_module_name => 'ha_supplier_onboarding_v1',
@@ -909,6 +940,114 @@ begin
       p_source_type        => 'HEADER',
       p_param_type         => 'STRING',
       p_access_method      => 'IN'
+   );
+
+   ords.define_template(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'countries'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'countries',
+      p_method      => 'GET',
+      p_source_type => ords.source_type_collection_feed,
+      p_source      => q'[
+      select
+        country_code,
+        country_name,
+        country_code || ' - ' || country_name as display_label,
+        country_name || ' (' || country_code || ')' as display_name,
+        iso3_code,
+        num_code,
+        active
+      from country_ref
+      where active = 'Y'
+      order by country_name asc
+      offset nvl(to_number(:offset), 0) rows
+      fetch next nvl(to_number(:limit), 300) rows only
+    ]'
+   );
+
+   ords.define_template(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'countries/batch'
+   );
+   ords.define_handler(
+      p_module_name => 'ha_supplier_onboarding_v1',
+      p_pattern     => 'countries/batch',
+      p_method      => 'POST',
+      p_source_type => ords.source_type_plsql,
+      p_source      => q'[
+      declare
+        l_body     clob := :body_text;
+        l_synced   number := 0;
+        l_root     json_object_t;
+        l_items    json_array_t;
+        l_item     json_element_t;
+        l_obj      json_object_t;
+        l_code     varchar2(10);
+        l_name     varchar2(100);
+        l_iso3     varchar2(10);
+        l_num      varchar2(10);
+        l_active   varchar2(10);
+      begin
+        if l_body is not null and dbms_lob.getlength(l_body) > 0 then
+          l_root := json_object_t.parse(l_body);
+          if l_root.has('items') then
+            l_items := l_root.get_array('items');
+            for i in 0 .. l_items.get_size - 1 loop
+              l_item := l_items.get(i);
+              if l_item.is_object then
+                l_obj := treat(l_item as json_object_t);
+                l_code := upper(trim(l_obj.get_string('country_code')));
+                l_name := trim(l_obj.get_string('country_name'));
+                if l_obj.has('iso3_code') then
+                  l_iso3 := upper(trim(l_obj.get_string('iso3_code')));
+                else
+                  l_iso3 := null;
+                end if;
+                if l_obj.has('num_code') then
+                  l_num := trim(l_obj.get_string('num_code'));
+                else
+                  l_num := null;
+                end if;
+                if l_obj.has('active') then
+                  l_active := coalesce(upper(trim(l_obj.get_string('active'))), 'Y');
+                else
+                  l_active := 'Y';
+                end if;
+
+                if l_code is not null and length(l_code) = 2 and regexp_like(l_code, '^[A-Z]{2}$') then
+                  merge into country_ref t
+                  using (select l_code as country_code, l_name as country_name, l_iso3 as iso3_code, l_num as num_code, l_active as active from dual) s
+                  on (t.country_code = s.country_code)
+                  when matched then update set
+                    t.country_name = s.country_name,
+                    t.iso3_code    = s.iso3_code,
+                    t.num_code     = s.num_code,
+                    t.active       = s.active,
+                    t.updated_at   = systimestamp
+                  when not matched then insert (
+                    country_code, country_name, iso3_code, num_code, active, created_at, updated_at
+                  ) values (
+                    s.country_code, s.country_name, s.iso3_code, s.num_code, s.active, systimestamp, systimestamp
+                  );
+                  l_synced := l_synced + 1;
+                end if;
+              end if;
+            end loop;
+            commit;
+          end if;
+        end if;
+        owa_util.mime_header('application/json', true);
+        htp.p('{"status":"SUCCESS","synced_count":' || l_synced || '}');
+      exception
+        when others then
+          rollback;
+          owa_util.mime_header('application/json', true);
+          htp.p('{"status":"ERROR","error_message":' || apex_json.stringify(sqlerrm) || '}');
+      end;
+    ]'
    );
 
    commit;

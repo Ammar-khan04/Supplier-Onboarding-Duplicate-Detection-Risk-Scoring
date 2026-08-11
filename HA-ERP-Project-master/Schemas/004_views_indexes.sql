@@ -56,7 +56,6 @@ left join latest_request_assessment_v a
   on a.request_id = r.request_id
 left join ai_assessment ai
   on ai.request_id = r.request_id
- and ai.request_version = r.request_version
  and ai.is_latest = 'Y';
 
 create or replace view request_detail_safe_v as
@@ -86,6 +85,7 @@ select
   r.currency_code,
   r.base_currency_amount,
   r.base_currency_code,
+  r.tax_registration_number,
   r.tax_registration_masked,
   r.bank_account_last_four,
   r.bank_country_code,
@@ -118,13 +118,20 @@ select
   ai.recommended_actions as latest_ai_recommended_actions,
   ai.justification_quality as latest_justification_quality,
   ai.model_name as latest_ai_model_name,
-  ai.status as latest_ai_status
+  ai.status as latest_ai_status,
+  (
+    select reason
+    from action_history
+    where request_id = r.request_id
+      and to_status = 'CORRECTION_REQUIRED'
+    order by action_at desc
+    fetch first 1 rows only
+  ) as latest_correction_reason
 from supplier_request r
 left join latest_request_assessment_v a
   on a.request_id = r.request_id
 left join ai_assessment ai
   on ai.request_id = r.request_id
- and ai.request_version = r.request_version
  and ai.is_latest = 'Y';
 
 create or replace view integration_log_safe_v as

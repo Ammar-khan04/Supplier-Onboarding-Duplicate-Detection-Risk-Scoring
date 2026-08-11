@@ -199,19 +199,10 @@ create or replace package body supplier_config_pkg as
   end is_tax_required;
 
   procedure validate_risk_allocation is
-    l_total number;
   begin
-    select nvl(sum(weight_points), 0)
-      into l_total
-      from risk_rule_config
-     where active = 'Y' and component = 'BASE';
-
-    if l_total <> 100 then
-      raise_application_error(
-        -20020,
-        'Risk allocation is invalid: active BASE risk rule weights must total exactly 100'
-      );
-    end if;
+    -- Validation bypassed: weights are now automatically normalized to 100
+    -- during assessment calculation.
+    null;
   end validate_risk_allocation;
 
   procedure update_risk_rule(
@@ -330,6 +321,26 @@ create or replace package body supplier_config_pkg as
      
     -- Note: UI will ensure continuous 0-100 coverage for the bands.
   end update_risk_score_band;
+
+  procedure update_spend_risk_band(
+    p_actor_subject_id in varchar2,
+    p_band_name in varchar2,
+    p_min_amount in number,
+    p_max_amount in number,
+    p_risk_weight_percentage in number,
+    p_active in varchar2
+  ) is
+    l_band_name varchar2(60) := upper(trim(p_band_name));
+  begin
+    update spend_risk_band_config
+       set min_amount = p_min_amount,
+           max_amount = p_max_amount,
+           risk_weight_percentage = p_risk_weight_percentage,
+           active = p_active,
+           updated_by_subject_id = p_actor_subject_id,
+           updated_at = systimestamp
+     where upper(band_name) = l_band_name;
+  end update_spend_risk_band;
 end supplier_config_pkg;
 /
 
@@ -1426,7 +1437,9 @@ create or replace package body supplier_validation_pkg as
 
     l_value := supplier_projection_pkg.normalize_text(p_value);
     l_value := ' ' || l_value || ' ';
-    l_value := regexp_replace(l_value, '\s(LTD|LIMITED|INC|INCORPORATED|LLC|LLP|CORP|CORPORATION|CO|COMPANY|GMBH|PLC|PVT|PTY)\s', ' ', 1, 0, 'i');
+    -- Run twice to catch consecutive suffixes like "PVT LTD"
+    l_value := regexp_replace(l_value, '\s(LTD|LIMITED|INC|INCORPORATED|LLC|LTC|LLP|CORP|CORPORATION|CO|COMPANY|GMBH|PLC|PVT|PTY|AL)\s', ' ', 1, 0, 'i');
+    l_value := regexp_replace(l_value, '\s(LTD|LIMITED|INC|INCORPORATED|LLC|LTC|LLP|CORP|CORPORATION|CO|COMPANY|GMBH|PLC|PVT|PTY|AL)\s', ' ', 1, 0, 'i');
     l_value := trim(regexp_replace(l_value, '\s+', ' '));
 
     return l_value;
@@ -1443,6 +1456,7 @@ create or replace package body supplier_validation_pkg as
     p_request in supplier_request%rowtype,
     p_best_score out number,
     p_best_supplier_number out varchar2,
+    p_best_supplier_name out varchar2,
     p_best_site_id out varchar2,
     p_best_name_similarity out number,
     p_best_address_similarity out number
@@ -1462,6 +1476,7 @@ create or replace package body supplier_validation_pkg as
   begin
     p_best_score := 0;
     p_best_supplier_number := null;
+    p_best_supplier_name := null;
     p_best_site_id := null;
     p_best_name_similarity := null;
     p_best_address_similarity := null;
@@ -1486,13 +1501,13 @@ create or replace package body supplier_validation_pkg as
              fss.fusion_supplier_site_id,
              fss.address_normalized,
              fss.email_domain,
-             fss.phone_normalized
+             fss.phone_normalized,
+             fss.country_code
         from fusion_supplier_ref fs
         join fusion_supplier_site_ref fss
           on fss.fusion_supplier_id = fs.fusion_supplier_id
        where fs.active = 'Y'
          and fss.active = 'Y'
-         and fss.country_code = l_request_country
     ) loop
       begin
         l_name_sim := utl_match.jaro_winkler_similarity(
@@ -1504,15 +1519,15 @@ create or replace package body supplier_validation_pkg as
           l_name_sim := 0;
       end;
 
-      -- Eligibility gate: must clear 70 on name similarity. Country is
-      -- already guaranteed by the query filter above.
-      if l_name_sim >= 70 then
+      -- Eligibility gate: must clear 40 on name similarity (lowered from 70).
+      if l_name_sim >= 40 then
         l_score_sum := 55 * l_name_sim;
         l_weight_sum := 55;
 
-        -- Country match: always 100 for anything reaching this point,
-        -- since the candidate query already filters on matching country.
-        l_score_sum := l_score_sum + 10 * 100;
+        -- Country match: only add points if country matches
+        if cand.country_code = l_request_country then
+          l_score_sum := l_score_sum + 10 * 100;
+        end if;
         l_weight_sum := l_weight_sum + 10;
 
         l_addr_sim := null;
@@ -1547,6 +1562,7 @@ create or replace package body supplier_validation_pkg as
         if l_score > p_best_score then
           p_best_score := l_score;
           p_best_supplier_number := cand.supplier_number;
+          p_best_supplier_name := cand.supplier_name;
           p_best_site_id := cand.fusion_supplier_site_id;
           p_best_name_similarity := l_name_sim;
           p_best_address_similarity := l_addr_sim;
@@ -1580,18 +1596,26 @@ create or replace package body supplier_validation_pkg as
     l_spend_weight number := 0;
     l_doc_count number := 0;
     l_rule_weight number;
+    
+    -- Currency and spend bands
+    l_exchange_rate number := 1.0;
+    l_base_amount number := 0;
+    l_spend_band_pct number := 0;
 
     -- Exact-match lookups
     l_exact_tax_found boolean := false;
     l_exact_tax_supplier_number varchar2(60);
+    l_exact_tax_supplier_name varchar2(240);
     l_exact_bank_found boolean := false;
     l_exact_bank_supplier_number varchar2(60);
+    l_exact_bank_supplier_name varchar2(240);
     l_tax_weight number := 0;
     l_bank_weight number := 0;
 
     -- Non-exact similarity candidate
     l_sim_score number;
     l_sim_supplier_number varchar2(60);
+    l_sim_supplier_name varchar2(240);
     l_sim_site_id varchar2(60);
     l_sim_name_similarity number;
     l_sim_address_similarity number;
@@ -1690,23 +1714,58 @@ create or replace package body supplier_validation_pkg as
       add_risk(l_risk_json, l_risk_count, 'MISSING_EXPECTED_DOCUMENT', l_rule_weight, l_rule_weight, 'No supporting document is attached', l_base_score);
     end if;
 
-    if nvl(l_request.base_currency_amount, l_request.expected_annual_spend) >= 500000 then
-      l_spend_weight := 5;
-    elsif nvl(l_request.base_currency_amount, l_request.expected_annual_spend) >= 250000 then
-      l_spend_weight := 3;
-    elsif nvl(l_request.base_currency_amount, l_request.expected_annual_spend) >= 100000 then
-      l_spend_weight := 2;
+    -- High expected spend rule
+    if l_request.expected_annual_spend is not null then
+      begin
+        select to_usd_rate
+          into l_exchange_rate
+          from currency_exchange_rate
+         where currency_code = upper(nvl(l_request.currency_code, 'USD'))
+           and active = 'Y';
+      exception
+        when no_data_found then
+          l_exchange_rate := 1.0;
+      end;
+      
+      l_base_amount := l_request.expected_annual_spend * l_exchange_rate;
+      
+      update supplier_request
+         set base_currency_amount = l_base_amount
+       where request_id = p_request_id;
+    else
+      l_base_amount := 0;
     end if;
 
-    add_risk(
-      l_risk_json,
-      l_risk_count,
-      'HIGH_EXPECTED_SPEND',
-      supplier_config_pkg.risk_rule_weight('HIGH_EXPECTED_SPEND'),
-      l_spend_weight,
-      'Expected annual spend falls in the configured band',
-      l_base_score
-    );
+    l_rule_weight := supplier_config_pkg.risk_rule_weight('HIGH_EXPECTED_SPEND');
+    
+    if l_rule_weight > 0 and l_base_amount > 0 then
+      begin
+        select risk_weight_percentage
+          into l_spend_band_pct
+          from spend_risk_band_config
+         where l_base_amount >= min_amount 
+           and (max_amount is null or l_base_amount <= max_amount)
+           and active = 'Y'
+         fetch first 1 row only;
+         
+        l_spend_weight := ceil(l_rule_weight * (l_spend_band_pct / 100));
+      exception
+        when no_data_found then
+          l_spend_weight := 0;
+      end;
+      
+      if l_spend_weight > 0 then
+        add_risk(
+          l_risk_json,
+          l_risk_count,
+          'HIGH_EXPECTED_SPEND',
+          l_rule_weight,
+          l_spend_weight,
+          'Expected annual spend evaluates to ' || to_char(l_base_amount, 'FM999,999,999.00') || ' USD, which falls in a configured risk band',
+          l_base_score
+        );
+      end if;
+    end if;
 
     -- ------------------------------------------------------------------
     -- Duplicate detection against local Fusion reference cache only.
@@ -1718,8 +1777,8 @@ create or replace package body supplier_validation_pkg as
     -- be active.
     if l_request.tax_registration_fingerprint is not null then
       begin
-        select fs.supplier_number
-          into l_exact_tax_supplier_number
+        select fs.supplier_number, fs.supplier_name
+          into l_exact_tax_supplier_number, l_exact_tax_supplier_name
           from fusion_supplier_tax_ref ftr
           join fusion_supplier_ref fs
             on fs.fusion_supplier_id = ftr.fusion_supplier_id
@@ -1737,8 +1796,8 @@ create or replace package body supplier_validation_pkg as
     -- Exact bank account match: same active-on-both-sides rule.
     if l_request.bank_account_fingerprint is not null then
       begin
-        select fs.supplier_number
-          into l_exact_bank_supplier_number
+        select fs.supplier_number, fs.supplier_name
+          into l_exact_bank_supplier_number, l_exact_bank_supplier_name
           from fusion_supplier_bank_ref fbr
           join fusion_supplier_ref fs
             on fs.fusion_supplier_id = fbr.fusion_supplier_id
@@ -1769,6 +1828,7 @@ create or replace package body supplier_validation_pkg as
         '{"match_type":"EXACT"' ||
         ',"tax_match":' || case when l_exact_tax_found then 'true' else 'false' end ||
         ',"bank_match":' || case when l_exact_bank_found then 'true' else 'false' end ||
+        ',"fusion_supplier_name":"' || json_escape(coalesce(l_exact_tax_supplier_name, l_exact_bank_supplier_name)) || '"' ||
         ',"fusion_supplier_number":"' || json_escape(coalesce(l_exact_tax_supplier_number, l_exact_bank_supplier_number)) || '"}'
       );
 
@@ -1796,6 +1856,7 @@ create or replace package body supplier_validation_pkg as
         p_request => l_request,
         p_best_score => l_sim_score,
         p_best_supplier_number => l_sim_supplier_number,
+        p_best_supplier_name => l_sim_supplier_name,
         p_best_site_id => l_sim_site_id,
         p_best_name_similarity => l_sim_name_similarity,
         p_best_address_similarity => l_sim_address_similarity
@@ -1816,6 +1877,7 @@ create or replace package body supplier_validation_pkg as
           l_duplicate_json,
           l_duplicate_count,
           '{"match_type":"SIMILARITY"' ||
+          ',"fusion_supplier_name":"' || json_escape(l_sim_supplier_name) || '"' ||
           ',"fusion_supplier_number":"' || json_escape(l_sim_supplier_number) || '"' ||
           ',"fusion_supplier_site_id":"' || json_escape(l_sim_site_id) || '"' ||
           ',"weighted_score":' || to_char(round(l_sim_score, 1)) ||
@@ -1840,7 +1902,17 @@ create or replace package body supplier_validation_pkg as
       end if;
     end if;
 
-    l_base_score := least(l_base_score, supplier_config_pkg.risk_component_total('BASE'));
+    declare
+      l_max_base_weight number := supplier_config_pkg.risk_component_total('BASE');
+    begin
+      if l_max_base_weight > 0 then
+        l_base_score := round((l_base_score / l_max_base_weight) * 100);
+      else
+        l_base_score := 0;
+      end if;
+    end;
+
+    l_base_score := least(l_base_score, 100);
     l_duplicate_score := least(l_duplicate_score, 45);
     l_total_score := least(l_base_score + l_duplicate_score, 100);
     l_risk_level := supplier_projection_pkg.risk_level(l_total_score);
@@ -2006,4 +2078,562 @@ create or replace package body supplier_workflow_pkg as
     );
   end transition_request;
 end supplier_workflow_pkg;
+/
+
+create or replace package body supplier_reference_pkg as
+
+  -- Helper function to resolve country name / code to 2-letter ASCII ISO code
+  function resolve_country_code(
+    p_raw_country in varchar2,
+    p_fallback    in varchar2 default 'US'
+  ) return varchar2 is
+    l_trimmed varchar2(100);
+    l_clean   varchar2(10);
+  begin
+    l_trimmed := upper(trim(p_raw_country));
+    
+    if l_trimmed is null then
+      if p_fallback is not null and length(trim(p_fallback)) = 2 and regexp_like(upper(trim(p_fallback)), '^[A-Z]{2}$') then
+        return upper(trim(p_fallback));
+      else
+        return 'US';
+      end if;
+    end if;
+
+    -- 1. If it's already a 2-letter ASCII code (e.g. 'US', 'PK', 'TR', 'MX', 'AD', 'BA')
+    if length(l_trimmed) = 2 and regexp_like(l_trimmed, '^[A-Z]{2}$') then
+      return l_trimmed;
+    end if;
+
+    -- 2. Common Country Names mapping
+    case l_trimmed
+      when 'UNITED STATES' then return 'US';
+      when 'PAKISTAN' then return 'PK';
+      when 'MEXICO' then return 'MX';
+      when 'TURKEY' then return 'TR';
+      when 'TÜRKIYE' then return 'TR';
+      when 'TÜRKİYE' then return 'TR';
+      when 'BOSNIA AND HERZEGOVINA' then return 'BA';
+      when 'ANDORRA' then return 'AD';
+      when 'ALBANIA' then return 'AL';
+      when 'AMERICAN SAMOA' then return 'AS';
+      when 'CANADA' then return 'CA';
+      when 'UNITED KINGDOM' then return 'GB';
+      when 'GERMANY' then return 'DE';
+      when 'FRANCE' then return 'FR';
+      when 'CHINA' then return 'CN';
+      when 'INDIA' then return 'IN';
+      when 'UNITED ARAB EMIRATES' then return 'AE';
+      when 'SAUDI ARABIA' then return 'SA';
+      else
+        -- 3. Check if fallback matches 2 ASCII letters
+        if p_fallback is not null and length(trim(p_fallback)) = 2 and regexp_like(upper(trim(p_fallback)), '^[A-Z]{2}$') then
+          return upper(trim(p_fallback));
+        end if;
+        
+        -- 4. Strip non-ASCII/special chars and take 2 letters
+        l_clean := regexp_replace(l_trimmed, '[^A-Z]', '');
+        if length(l_clean) >= 2 then
+          return substr(l_clean, 1, 2);
+        else
+          return 'US';
+        end if;
+    end case;
+  end resolve_country_code;
+
+  procedure sync_batch(
+    p_sync_id in varchar2 default null,
+    p_payload in clob,
+    p_status out varchar2,
+    p_suppliers_synced out number,
+    p_tax_synced out number,
+    p_sites_synced out number,
+    p_bank_synced out number,
+    p_error_message out varchar2
+  ) is
+    l_sync_id          varchar2(120);
+    l_root_tax_country varchar2(10);
+    l_tx_country       varchar2(10);
+    l_site_country     varchar2(10);
+    l_bank_country     varchar2(10);
+  begin
+    p_status := 'SUCCESS';
+    p_suppliers_synced := 0;
+    p_tax_synced := 0;
+    p_sites_synced := 0;
+    p_bank_synced := 0;
+    p_error_message := null;
+
+    if p_payload is null or dbms_lob.getlength(p_payload) = 0 then
+      p_status := 'EMPTY_PAYLOAD';
+      return;
+    end if;
+
+    l_sync_id := coalesce(p_sync_id, json_value(p_payload, '$.syncId'), json_value(p_payload, '$.sync_id'), 'SYNC-' || to_char(systimestamp, 'YYYYMMDD-HH24MISS'));
+
+    -- Process suppliers (supports both direct Fusion $.items[*] and custom $.suppliers[*])
+    for sup in (
+      select
+        coalesce(fusion_supplier_id, to_char(fusion_id_num)) as fusion_supplier_id,
+        coalesce(supplier_number, fusion_supplier_num, 'SUP-' || coalesce(fusion_supplier_id, to_char(fusion_id_num))) as supplier_number,
+        coalesce(supplier_name, fusion_supplier_name) as supplier_name,
+        coalesce(supplier_type, fusion_supplier_type, 'SUPPLIER') as supplier_type,
+        case when upper(coalesce(active, status, 'Y')) in ('Y', 'TRUE', 'ACTIVE') then 'Y' else 'N' end as active,
+        coalesce(tax_reg_num_root, taxpayer_id_root) as root_tax_num,
+        tax_country_root,
+        taxpayer_country_root,
+        tax_org_type_root as root_tax_type,
+        tax_registrations_json,
+        addresses_json,
+        sites_json,
+        bank_accounts_json
+      from json_table(
+        p_payload,
+        'lax $.items[*]'
+        columns (
+          fusion_supplier_id      varchar2(80)  path '$.fusionSupplierId',
+          fusion_id_num           number        path '$.SupplierId',
+          supplier_number         varchar2(80)  path '$.supplierNumber',
+          fusion_supplier_num     varchar2(80)  path '$.SupplierNumber',
+          supplier_name           varchar2(240) path '$.supplierName',
+          fusion_supplier_name    varchar2(240) path '$.Supplier',
+          supplier_type           varchar2(60)  path '$.supplierType',
+          fusion_supplier_type    varchar2(60)  path '$.SupplierType',
+          active                  varchar2(20)  path '$.active',
+          status                  varchar2(20)  path '$.Status',
+          tax_reg_num_root        varchar2(100) path '$.TaxRegistrationNumber',
+          tax_country_root        varchar2(100) path '$.TaxRegistrationCountryCode',
+          taxpayer_id_root        varchar2(100) path '$.TaxpayerId',
+          taxpayer_country_root   varchar2(100) path '$.TaxpayerCountryCode',
+          tax_org_type_root       varchar2(80)  path '$.TaxOrganizationType',
+          tax_registrations_json  clob          format json path '$.taxRegistrations',
+          addresses_json          clob          format json path '$.addresses',
+          sites_json              clob          format json path '$.sites',
+          bank_accounts_json      clob          format json path '$.bankAccounts'
+        )
+      )
+      union all
+      select
+        coalesce(fusion_supplier_id, to_char(fusion_id_num)) as fusion_supplier_id,
+        coalesce(supplier_number, fusion_supplier_num, 'SUP-' || coalesce(fusion_supplier_id, to_char(fusion_id_num))) as supplier_number,
+        coalesce(supplier_name, fusion_supplier_name) as supplier_name,
+        coalesce(supplier_type, fusion_supplier_type, 'SUPPLIER') as supplier_type,
+        case when upper(coalesce(active, status, 'Y')) in ('Y', 'TRUE', 'ACTIVE') then 'Y' else 'N' end as active,
+        coalesce(tax_reg_num_root, taxpayer_id_root) as root_tax_num,
+        tax_country_root,
+        taxpayer_country_root,
+        tax_org_type_root as root_tax_type,
+        tax_registrations_json,
+        addresses_json,
+        sites_json,
+        bank_accounts_json
+      from json_table(
+        p_payload,
+        'lax $.suppliers[*]'
+        columns (
+          fusion_supplier_id      varchar2(80)  path '$.fusionSupplierId',
+          fusion_id_num           number        path '$.SupplierId',
+          supplier_number         varchar2(80)  path '$.supplierNumber',
+          fusion_supplier_num     varchar2(80)  path '$.SupplierNumber',
+          supplier_name           varchar2(240) path '$.supplierName',
+          fusion_supplier_name    varchar2(240) path '$.Supplier',
+          supplier_type           varchar2(60)  path '$.supplierType',
+          fusion_supplier_type    varchar2(60)  path '$.SupplierType',
+          active                  varchar2(20)  path '$.active',
+          status                  varchar2(20)  path '$.Status',
+          tax_reg_num_root        varchar2(100) path '$.TaxRegistrationNumber',
+          tax_country_root        varchar2(100) path '$.TaxRegistrationCountryCode',
+          taxpayer_id_root        varchar2(100) path '$.TaxpayerId',
+          taxpayer_country_root   varchar2(100) path '$.TaxpayerCountryCode',
+          tax_org_type_root       varchar2(80)  path '$.TaxOrganizationType',
+          tax_registrations_json  clob          format json path '$.taxRegistrations',
+          addresses_json          clob          format json path '$.addresses',
+          sites_json              clob          format json path '$.sites',
+          bank_accounts_json      clob          format json path '$.bankAccounts'
+        )
+      )
+    ) loop
+      if sup.fusion_supplier_id is not null then
+        l_root_tax_country := resolve_country_code(coalesce(sup.tax_country_root, sup.taxpayer_country_root), 'US');
+
+        -- 1. Merge Supplier Header
+        merge into fusion_supplier_ref t
+        using (
+          select
+            sup.fusion_supplier_id as fusion_supplier_id,
+            sup.supplier_number as supplier_number,
+            sup.supplier_name as supplier_name,
+            supplier_projection_pkg.normalize_text(sup.supplier_name) as supplier_name_normalized,
+            sup.supplier_type as supplier_type,
+            sup.active as active,
+            l_sync_id as sync_id
+          from dual
+        ) s
+        on (t.fusion_supplier_id = s.fusion_supplier_id)
+        when matched then update set
+          t.supplier_number          = s.supplier_number,
+          t.supplier_name            = s.supplier_name,
+          t.supplier_name_normalized = s.supplier_name_normalized,
+          t.supplier_type            = s.supplier_type,
+          t.active                   = s.active,
+          t.last_seen_sync_id        = s.sync_id,
+          t.last_synced_at           = systimestamp
+        when not matched then insert (
+          fusion_supplier_id, supplier_number, supplier_name,
+          supplier_name_normalized, supplier_type, active,
+          last_seen_sync_id, last_synced_at
+        ) values (
+          s.fusion_supplier_id, s.supplier_number, s.supplier_name,
+          s.supplier_name_normalized, s.supplier_type, s.active,
+          s.sync_id, systimestamp
+        );
+        p_suppliers_synced := p_suppliers_synced + 1;
+
+        -- 2A. Merge Root Tax Registration
+        if sup.root_tax_num is not null then
+          merge into fusion_supplier_tax_ref t
+          using (
+            select
+              'TAX-' || sup.fusion_supplier_id || '-ROOT' as fusion_tax_reference_id,
+              sup.fusion_supplier_id as fusion_supplier_id,
+              l_root_tax_country as country_code,
+              coalesce(sup.root_tax_type, 'STANDARD') as tax_type,
+              supplier_projection_pkg.fingerprint(sup.root_tax_num) as tax_id_fingerprint,
+              supplier_projection_pkg.mask_identifier(sup.root_tax_num) as tax_id_masked,
+              'Y' as active,
+              l_sync_id as sync_id
+            from dual
+          ) s
+          on (t.fusion_tax_reference_id = s.fusion_tax_reference_id)
+          when matched then update set
+            t.country_code       = s.country_code,
+            t.tax_type           = s.tax_type,
+            t.tax_id_fingerprint = s.tax_id_fingerprint,
+            t.tax_id_masked      = s.tax_id_masked,
+            t.active             = s.active,
+            t.last_seen_sync_id  = s.sync_id,
+            t.last_synced_at     = systimestamp
+          when not matched then insert (
+            fusion_tax_reference_id, fusion_supplier_id, country_code,
+            tax_type, tax_id_fingerprint, tax_id_masked,
+            active, last_seen_sync_id, last_synced_at
+          ) values (
+            s.fusion_tax_reference_id, s.fusion_supplier_id, s.country_code,
+            s.tax_type, s.tax_id_fingerprint, s.tax_id_masked,
+            s.active, s.sync_id, systimestamp
+          );
+          p_tax_synced := p_tax_synced + 1;
+        end if;
+
+        -- 2B. Merge Tax Registrations (Child array)
+        if sup.tax_registrations_json is not null then
+          for tx in (
+            select
+              coalesce(fusion_tax_ref_id, 'TAX-' || sup.fusion_supplier_id || '-' || rownum) as tax_ref_id,
+              country_code_raw,
+              coalesce(tax_type, 'STANDARD') as tax_type,
+              tax_reg_num,
+              case when upper(coalesce(active, 'Y')) in ('Y', 'TRUE') then 'Y' else 'N' end as active
+            from json_table(
+              sup.tax_registrations_json,
+              '$[*]'
+              columns (
+                fusion_tax_ref_id varchar2(80)  path '$.fusionTaxReferenceId',
+                country_code_raw  varchar2(100) path '$.countryCode',
+                tax_type          varchar2(80)  path '$.taxType',
+                tax_reg_num       varchar2(100) path '$.taxRegistrationNumber',
+                active            varchar2(20)  path '$.active'
+              )
+            )
+          ) loop
+            l_tx_country := resolve_country_code(tx.country_code_raw, l_root_tax_country);
+            if tx.tax_reg_num is not null and l_tx_country is not null then
+              merge into fusion_supplier_tax_ref t
+              using (
+                select
+                  tx.tax_ref_id as fusion_tax_reference_id,
+                  sup.fusion_supplier_id as fusion_supplier_id,
+                  l_tx_country as country_code,
+                  tx.tax_type as tax_type,
+                  supplier_projection_pkg.fingerprint(tx.tax_reg_num) as tax_id_fingerprint,
+                  supplier_projection_pkg.mask_identifier(tx.tax_reg_num) as tax_id_masked,
+                  tx.active as active,
+                  l_sync_id as sync_id
+                from dual
+              ) s
+              on (t.fusion_tax_reference_id = s.fusion_tax_reference_id)
+              when matched then update set
+                t.country_code       = s.country_code,
+                t.tax_type           = s.tax_type,
+                t.tax_id_fingerprint = s.tax_id_fingerprint,
+                t.tax_id_masked      = s.tax_id_masked,
+                t.active             = s.active,
+                t.last_seen_sync_id  = s.sync_id,
+                t.last_synced_at     = systimestamp
+              when not matched then insert (
+                fusion_tax_reference_id, fusion_supplier_id, country_code,
+                tax_type, tax_id_fingerprint, tax_id_masked,
+                active, last_seen_sync_id, last_synced_at
+              ) values (
+                s.fusion_tax_reference_id, s.fusion_supplier_id, s.country_code,
+                s.tax_type, s.tax_id_fingerprint, s.tax_id_masked,
+                s.active, s.sync_id, systimestamp
+              );
+              p_tax_synced := p_tax_synced + 1;
+            end if;
+          end loop;
+        end if;
+
+        -- 3A. Merge Addresses (Fusion format)
+        if sup.addresses_json is not null then
+          for addr in (
+            select
+              coalesce(to_char(address_id), 'ADDR-' || sup.fusion_supplier_id || '-' || rownum) as site_id,
+              coalesce(address_name, 'Address ' || rownum) as site_name,
+              country_raw,
+              address_line1,
+              address_line2,
+              city,
+              state_or_province,
+              postal_code,
+              email,
+              phone,
+              'Y' as active
+            from json_table(
+              sup.addresses_json,
+              '$[*]'
+              columns (
+                address_id        number        path '$.AddressId',
+                address_name      varchar2(200) path '$.AddressName',
+                country_raw       varchar2(100) path '$.Country',
+                address_line1     varchar2(240) path '$.AddressLine1',
+                address_line2     varchar2(240) path '$.AddressLine2',
+                city              varchar2(120) path '$.City',
+                state_or_province varchar2(120) path '$.State',
+                postal_code       varchar2(40)  path '$.PostalCode',
+                email             varchar2(160) path '$.Email',
+                phone             varchar2(80)  path '$.PhoneNumber'
+              )
+            )
+          ) loop
+            l_site_country := resolve_country_code(addr.country_raw, l_root_tax_country);
+            if l_site_country is not null then
+              merge into fusion_supplier_site_ref t
+              using (
+                select
+                  addr.site_id as fusion_supplier_site_id,
+                  sup.fusion_supplier_id as fusion_supplier_id,
+                  addr.site_name as site_name,
+                  addr.site_id as site_number,
+                  l_site_country as country_code,
+                  addr.address_line1 as address_line1,
+                  addr.address_line2 as address_line2,
+                  addr.city as city,
+                  addr.state_or_province as state_or_province,
+                  addr.postal_code as postal_code,
+                  supplier_projection_pkg.normalize_text(addr.address_line1 || ' ' || addr.city || ' ' || l_site_country) as address_normalized,
+                  case when instr(addr.email, '@') > 0 then lower(substr(addr.email, instr(addr.email, '@') + 1)) else null end as email_domain,
+                  regexp_replace(addr.phone, '[^0-9]', '') as phone_normalized,
+                  addr.active as active,
+                  l_sync_id as sync_id
+                from dual
+              ) s
+              on (t.fusion_supplier_site_id = s.fusion_supplier_site_id)
+              when matched then update set
+                t.site_name          = s.site_name,
+                t.country_code       = s.country_code,
+                t.address_line1      = s.address_line1,
+                t.address_line2      = s.address_line2,
+                t.city               = s.city,
+                t.state_or_province  = s.state_or_province,
+                t.postal_code        = s.postal_code,
+                t.address_normalized = s.address_normalized,
+                t.email_domain       = s.email_domain,
+                t.phone_normalized   = s.phone_normalized,
+                t.active             = s.active,
+                t.last_seen_sync_id  = s.sync_id,
+                t.last_synced_at     = systimestamp
+              when not matched then insert (
+                fusion_supplier_site_id, fusion_supplier_id, site_name,
+                site_number, country_code, address_line1, address_line2,
+                city, state_or_province, postal_code, address_normalized,
+                email_domain, phone_normalized, active, last_seen_sync_id,
+                last_synced_at
+              ) values (
+                s.fusion_supplier_site_id, s.fusion_supplier_id, s.site_name,
+                s.site_number, s.country_code, s.address_line1, s.address_line2,
+                s.city, s.state_or_province, s.postal_code, s.address_normalized,
+                s.email_domain, s.phone_normalized, s.active, s.sync_id,
+                systimestamp
+              );
+              p_sites_synced := p_sites_synced + 1;
+            end if;
+          end loop;
+        end if;
+
+        -- 3B. Merge Sites (Custom format)
+        if sup.sites_json is not null then
+          for st in (
+            select
+              coalesce(fusion_site_id, to_char(fusion_site_num), 'SITE-' || sup.fusion_supplier_id || '-' || rownum) as site_id,
+              coalesce(site_name, fusion_site_name) as site_name,
+              site_number,
+              country_raw,
+              address_line1,
+              address_line2,
+              city,
+              state_or_province,
+              postal_code,
+              contact_email,
+              phone,
+              case when upper(coalesce(active, status, 'Y')) in ('Y', 'TRUE', 'ACTIVE') then 'Y' else 'N' end as active
+            from json_table(
+              sup.sites_json,
+              '$[*]'
+              columns (
+                fusion_site_id    varchar2(80)  path '$.fusionSupplierSiteId',
+                fusion_site_num   number        path '$.SupplierSiteId',
+                site_name         varchar2(200) path '$.siteName',
+                fusion_site_name  varchar2(200) path '$.SupplierSite',
+                site_number       varchar2(80)  path '$.siteNumber',
+                country_raw       varchar2(100) path '$.countryCode',
+                address_line1     varchar2(240) path '$.addressLine1',
+                address_line2     varchar2(240) path '$.addressLine2',
+                city              varchar2(120) path '$.city',
+                state_or_province varchar2(120) path '$.stateOrProvince',
+                postal_code       varchar2(40)  path '$.postalCode',
+                contact_email     varchar2(160) path '$.contactEmail',
+                phone             varchar2(80)  path '$.phone',
+                active            varchar2(20)  path '$.active',
+                status            varchar2(20)  path '$.Status'
+              )
+            )
+          ) loop
+            l_site_country := resolve_country_code(st.country_raw, l_root_tax_country);
+            if l_site_country is not null then
+              merge into fusion_supplier_site_ref t
+              using (
+                select
+                  st.site_id as fusion_supplier_site_id,
+                  sup.fusion_supplier_id as fusion_supplier_id,
+                  st.site_name as site_name,
+                  st.site_number as site_number,
+                  l_site_country as country_code,
+                  st.address_line1 as address_line1,
+                  st.address_line2 as address_line2,
+                  st.city as city,
+                  st.state_or_province as state_or_province,
+                  st.postal_code as postal_code,
+                  supplier_projection_pkg.normalize_text(st.address_line1 || ' ' || st.city || ' ' || l_site_country) as address_normalized,
+                  case when instr(st.contact_email, '@') > 0 then lower(substr(st.contact_email, instr(st.contact_email, '@') + 1)) else null end as email_domain,
+                  regexp_replace(st.phone, '[^0-9]', '') as phone_normalized,
+                  st.active as active,
+                  l_sync_id as sync_id
+                from dual
+              ) s
+              on (t.fusion_supplier_site_id = s.fusion_supplier_site_id)
+              when matched then update set
+                t.site_name          = s.site_name,
+                t.site_number        = s.site_number,
+                t.country_code       = s.country_code,
+                t.address_line1      = s.address_line1,
+                t.address_line2      = s.address_line2,
+                t.city               = s.city,
+                t.state_or_province  = s.state_or_province,
+                t.postal_code        = s.postal_code,
+                t.address_normalized = s.address_normalized,
+                t.email_domain       = s.email_domain,
+                t.phone_normalized   = s.phone_normalized,
+                t.active             = s.active,
+                t.last_seen_sync_id  = s.sync_id,
+                t.last_synced_at     = systimestamp
+              when not matched then insert (
+                fusion_supplier_site_id, fusion_supplier_id, site_name,
+                site_number, country_code, address_line1, address_line2,
+                city, state_or_province, postal_code, address_normalized,
+                email_domain, phone_normalized, active, last_seen_sync_id,
+                last_synced_at
+              ) values (
+                s.fusion_supplier_site_id, s.fusion_supplier_id, s.site_name,
+                s.site_number, s.country_code, s.address_line1, s.address_line2,
+                s.city, s.state_or_province, s.postal_code, s.address_normalized,
+                s.email_domain, s.phone_normalized, s.active, s.sync_id,
+                systimestamp
+              );
+              p_sites_synced := p_sites_synced + 1;
+            end if;
+          end loop;
+        end if;
+
+        -- 4. Bank Accounts
+        if sup.bank_accounts_json is not null then
+          for bk in (
+            select
+              coalesce(fusion_bank_id, 'BANK-' || sup.fusion_supplier_id || '-' || rownum) as bank_id,
+              bank_country_code_raw,
+              upper(substr(trim(currency_code), 1, 3)) as currency_code,
+              bank_acc_num,
+              case when upper(coalesce(active, 'Y')) in ('Y', 'TRUE') then 'Y' else 'N' end as active
+            from json_table(
+              sup.bank_accounts_json,
+              '$[*]'
+              columns (
+                fusion_bank_id        varchar2(80)  path '$.fusionBankAccountId',
+                bank_country_code_raw varchar2(100) path '$.bankCountryCode',
+                currency_code         varchar2(10)  path '$.currencyCode',
+                bank_acc_num          varchar2(100) path '$.bankAccountNumber',
+                active                varchar2(20)  path '$.active'
+              )
+            )
+          ) loop
+            l_bank_country := resolve_country_code(bk.bank_country_code_raw, l_root_tax_country);
+            if bk.bank_acc_num is not null then
+              merge into fusion_supplier_bank_ref t
+              using (
+                select
+                  bk.bank_id as fusion_bank_account_id,
+                  sup.fusion_supplier_id as fusion_supplier_id,
+                  l_bank_country as bank_country_code,
+                  bk.currency_code as currency_code,
+                  supplier_projection_pkg.fingerprint(bk.bank_acc_num) as bank_account_fingerprint,
+                  substr(regexp_replace(bk.bank_acc_num, '[^0-9]', ''), -4) as bank_account_last_four,
+                  bk.active as active,
+                  l_sync_id as sync_id
+                from dual
+              ) s
+              on (t.fusion_bank_account_id = s.fusion_bank_account_id)
+              when matched then update set
+                t.bank_country_code        = s.bank_country_code,
+                t.currency_code            = s.currency_code,
+                t.bank_account_fingerprint = s.bank_account_fingerprint,
+                t.bank_account_last_four   = s.bank_account_last_four,
+                t.active                   = s.active,
+                t.last_seen_sync_id        = s.sync_id,
+                t.last_synced_at           = systimestamp
+              when not matched then insert (
+                fusion_bank_account_id, fusion_supplier_id, bank_country_code,
+                currency_code, bank_account_fingerprint, bank_account_last_four,
+                active, last_seen_sync_id, last_synced_at
+              ) values (
+                s.fusion_bank_account_id, s.fusion_supplier_id, s.bank_country_code,
+                s.currency_code, s.bank_account_fingerprint, s.bank_account_last_four,
+                s.active, s.sync_id, systimestamp
+              );
+              p_bank_synced := p_bank_synced + 1;
+            end if;
+          end loop;
+        end if;
+
+      end if;
+    end loop;
+
+    commit;
+    p_status := 'SUCCESS';
+  exception
+    when others then
+      rollback;
+      p_status := 'ERROR';
+      p_error_message := sqlerrm;
+  end sync_batch;
+end supplier_reference_pkg;
 /

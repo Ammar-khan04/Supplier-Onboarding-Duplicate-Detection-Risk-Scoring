@@ -75,6 +75,15 @@ create or replace package supplier_config_pkg as
     p_min_score in number,
     p_max_score in number
   );
+
+  procedure update_spend_risk_band(
+    p_actor_subject_id in varchar2,
+    p_band_name in varchar2,
+    p_min_amount in number,
+    p_max_amount in number,
+    p_risk_weight_percentage in number,
+    p_active in varchar2
+  );
 end supplier_config_pkg;
 /
 
@@ -297,3 +306,18 @@ create or replace package supplier_workflow_pkg as
   );
 end supplier_workflow_pkg;
 /
+
+create or replace package supplier_reference_pkg as
+  procedure sync_batch(
+    p_sync_id in varchar2 default null,
+    p_payload in clob,
+    p_status out varchar2,
+    p_suppliers_synced out number,
+    p_tax_synced out number,
+    p_sites_synced out number,
+    p_bank_synced out number,
+    p_error_message out varchar2
+  );
+end supplier_reference_pkg;
+/
+

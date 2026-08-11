@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "country_code": "IR",
+      "reason": "Seeded sanctions and enhanced review list",
+      "source_name": "Prototype baseline",
+      "effective_date": "2026-07-21T00:00:00Z",
+      "active": "Y",
+      "updated_by_subject_id": "SYSTEM",
+      "updated_at": "2026-07-24T12:28:04.085813Z"
+    },
+    {
+      "country_code": "KP",
+      "reason": "Seeded sanctions and enhanced review list",
+      "source_name": "Prototype baseline",
+      "effective_date": "2026-07-21T00:00:00Z",
+      "active": "Y",
+      "updated_by_subject_id": "SYSTEM",
+      "updated_at": "2026-07-24T12:28:04.592967Z"
+    },
+    {
+      "country_code": "SY",
+      "reason": "Seeded sanctions and enhanced review list",
+      "source_name": "Prototype baseline",
+      "effective_date": "2026-07-21T00:00:00Z",
+      "active": "Y",
+      "updated_by_subject_id": "SYSTEM",
+      "updated_at": "2026-07-24T12:28:05.041701Z"
+    }
+  ],
+  "hasMore": false,
+  "limit": 25,
+  "offset": 0,
+  "count": 3,
+  "links": [
+    {
+      "rel": "self",
+      "href": "http://172.105.152.7:8181/ords/ha_erp_api/ha_v1/high-risk-countries"
+    },
+    {
+      "rel": "describedby",
+      "href": "http://172.105.152.7:8181/ords/ha_erp_api/metadata-catalog/ha_v1/item"
+    },
+    {
+      "rel": "first",
+      "href": "http://172.105.152.7:8181/ords/ha_erp_api/ha_v1/high-risk-countries"
+    }
+  ]
+}

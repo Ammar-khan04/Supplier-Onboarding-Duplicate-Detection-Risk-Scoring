@@ -1,0 +1,90 @@
+{
+  "title": "Item 2",
+  "description": "",
+  "variables": {},
+  "metadata": {
+    "dynamicContainerMetadata": {
+      "type": "vb/ContainerMetadataProviderDescriptor"
+    }
+  },
+  "types": {},
+  "eventListeners": {},
+  "imports": {
+    "components": {
+      "oj-dyn-container": {
+        "path": "oj-dyn/container/loader"
+      }
+   }
+  },
+  "layouts": {
+    "containerLayout1": {
+      "label": "Container Rule Set 1",
+      "layoutType": "container",
+      "layouts": {
+        "case1": {
+          "label": "Case 1",
+          "layoutType": "container",
+          "layout": {
+            "sectionTemplateMap": {
+              "template1": "template1"
+            },
+            "displayProperties": [
+              "template1"
+            ]
+          }
+        }
+      },
+      "rules": [
+        "containerLayout1-rule1"
+      ]
+    },
+    "containerLayout1-rule1": {
+      "expression": "case1"
+    },
+    "containerLayout2": {
+      "label": "Container Rule Set 1",
+      "layoutType": "container",
+      "layouts": {
+        "case1": {
+          "label": "Case 1",
+          "layoutType": "container",
+          "layout": {
+            "sectionTemplateMap": {
+              "template2": "template2"
+            },
+            "displayProperties": [
+              "template2"
+            ]
+          }
+        }
+      },
+      "rules": [
+        "containerLayout2-rule1"
+      ]
+    },
+    "containerLayout2-rule1": {
+      "expression": "case1"
+    }
+  },
+  "templates": {
+    "template1": {
+      "title": "Default Section",
+      "extensible": "byReference",
+      "@dt": {
+        "type": "section",
+        "layout": "containerLayout1"
+      },
+      "dependencies": [
+        "oj-dyn/container/loader"
+      ]
+    },
+    "template2": {
+      "title": "Default Section",
+      "extensible": "byReference",
+      "@dt": {
+        "type": "section",
+        "layout": "containerLayout2"
+      }
+    }
+  }
+}
